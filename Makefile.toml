@@ -12,6 +12,7 @@ default_to_workspace = false
 DOCKER_BUILDKIT = "1"
 CARGO_MAKE_SCRIPT_FORCE_PIPE_STDIN = true
 
+
 env_files = ["./.env"]
 
 ##########################
@@ -52,8 +53,9 @@ run_task = { name = [
 
 [tasks.contract-registry-release-build]
 command = "cargo"
-args = ["build", "--release", "--target", "wasm32-unknown-unknown"]
+args = ["build", "--release", "--target", "wasm32-unknown-unknown", "--locked"]
 cwd = "./contracts/registry"
+env = { RUSTFLAGS = "-C link-arg=-s" }
 
 [tasks.contract-registry-release-optimize]
 command = "wasm-opt"

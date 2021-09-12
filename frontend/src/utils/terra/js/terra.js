@@ -2,6 +2,7 @@ const {LCDClient, Coin, MnemonicKey, isTxError, MsgStoreCode} = window.Terra;
 // these imports break rollup!
 
 //import { LCDClient, Coin, MnemonicKey} from '@terra-money/terra.js';
+//import * as Foo from "@terra-money/wallet-provider";
 /*
 import {
   ConnectType,
@@ -48,14 +49,12 @@ export function _upload_contract(bytes) {
           return Promise.reject(`store code failed. code: ${storeCodeTxResult.code}, codespace: ${storeCodeTxResult.codespace}, raw_log: ${storeCodeTxResult.raw_log}`);
         }
 
+        console.log(storeCodeTxResult);
+
         const {
           store_code: { code_id },
         } = storeCodeTxResult.logs[0].eventsByType;
 
-        return Promise.resolve(code_id);
-    })
-    .then(res => {
-      console.log(res);
-      return res;
+        return Promise.resolve(code_id[0]);
     });
 }

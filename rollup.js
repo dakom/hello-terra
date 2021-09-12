@@ -8,6 +8,7 @@ import { terser } from "rollup-plugin-terser";
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import path from "path";
+import nodePolyfills from 'rollup-plugin-polyfill-node';
 
 require('dotenv').config({path:path.resolve('./.env')})
 
@@ -25,6 +26,15 @@ export default {
     },
     context: "window",
     plugins: getPlugins(),
+    external: [
+        "react-is",
+        "react",
+        "styled-components",
+        "react-dom",
+        "react/jsx-runtime",
+        "@terra-money/terra.js",
+        "qrcode.react",
+    ]
 };
 
 function getPlugins() {
@@ -35,7 +45,8 @@ function getPlugins() {
     ].map(x => path.resolve(x));
 
     const plugins = [
-        json(),
+        //json(),
+        //nodePolyfills( /* options */ ),
         nodeResolve(),
         commonjs(),
         copy({
