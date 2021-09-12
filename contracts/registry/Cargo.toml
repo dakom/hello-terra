@@ -1,0 +1,39 @@
+[package]
+name = "contract_registry"
+version = "0.1.0"
+description = "Registry Contract"
+authors = ["David Komer <david.komer@gmail.com>"]
+readme = "README.md"
+license = "MIT"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+shared = { path = "../../shared" }
+terra-cosmwasm = { version = "2.2.0", optional = true }
+cosmwasm-std = { version = "0.16.2", optional = true }
+cosmwasm-storage = {version = "0.16.2", optional = true }
+serde = { version = "1.0.130", default-features = false, features = ["derive"] }
+schemars = "0.8.3"
+cfg-if = "1.0.0"
+
+[dev-dependencies]
+cosmwasm-schema = "0.16.2"
+
+[features]
+default = ["terra"]
+quiet = []
+frontend = []
+terra = [
+    "shared/terra", 
+    "terra-cosmwasm",
+    "cosmwasm-std",
+    "cosmwasm-storage",
+]
+local = ["quiet"]
+release = []
+# for quicker tests, cargo test --lib
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
