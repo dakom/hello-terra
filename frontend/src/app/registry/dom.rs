@@ -60,6 +60,15 @@ impl Registry {
                     }))
                 })
             ])
+
+            .global_event(clone!(state => move |evt:dominator_helpers::events::Message| {
+                if let Ok(msg) = evt.try_serde_data::<WalletMsg>() {
+                    Self::handle_wallet_message(state.clone(), msg);
+                } else {
+                    //example: log::info!("{}", WalletMsg::Status("hello".to_string()).to_json_string());
+                    log::error!("hmmm got other iframe message...");
+                }
+            }))
             .child_signal(state.loader.is_loading().map(|is_loading| {
                 if is_loading {
                     Some(Overlay::new().render_loader())

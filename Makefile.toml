@@ -26,10 +26,12 @@ script = ["mkdir ./dist/contracts"]
 ##  FRONTEND            ##
 ##########################
 
+## Dev
 [tasks.frontend-dev]
 run_task = { name = [
     "frontend-run-dev-mediaserver",
     "frontend-run-dev-npm",
+    "frontend-run-iframe-dev-npm",
 ], fork = true, parallel = true }
 
 [tasks.frontend-run-dev-mediaserver]
@@ -39,6 +41,28 @@ script = ["node ./frontend/local-media-server.js"]
 [tasks.frontend-run-dev-npm]
 script_runner = "@shell"
 script = ["npm start"] 
+
+[tasks.frontend-run-iframe-dev-npm]
+script_runner = "@shell"
+script = ["npm start"] 
+cwd = "./frontend/iframe"
+
+## Build
+[tasks.frontend-build]
+run_task = { name = [
+    "frontend-build-npm",
+    "frontend-build-iframe-npm",
+]}
+
+[tasks.frontend-build-npm]
+script_runner = "@shell"
+script = ["npm run build"] 
+
+
+[tasks.frontend-build-iframe-npm]
+script_runner = "@shell"
+script = ["npm run build"] 
+cwd = "./frontend/iframe"
 
 ##########################
 ##  CONTRACT - REGISTRY ##

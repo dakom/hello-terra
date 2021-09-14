@@ -1,7 +1,12 @@
-const {LCDClient, Coin, MnemonicKey, isTxError, MsgStoreCode} = window.Terra;
+//const {LCDClient, Coin, MnemonicKey, isTxError, MsgStoreCode} = window.Terra;
+
+
+//import {ChromeExtensionController} from "@terra-dev/chrome-extension";
+
+//const chromeExtensionController = new ChromeExtensionController();
 // these imports break rollup!
 
-//import { LCDClient, Coin, MnemonicKey} from '@terra-money/terra.js';
+//import { LCDClient, Coin, MnemonicKey, isTxError, MsgStoreCode} from '@terra-money/terra.js';
 //import * as Foo from "@terra-money/wallet-provider";
 /*
 import {

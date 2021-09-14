@@ -25,7 +25,7 @@ impl Header {
                                 Button::new_color(ButtonColor::Blue, "Logout")
                                     .render_mixin(clone!(state => move |dom| {
                                         dom.event(clone!(state => move |evt:events::Click| {
-                                            state.logout();
+                                            state.app.logout();
                                         }))
                                     }))
                             );

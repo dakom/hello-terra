@@ -42,7 +42,15 @@ impl Registry {
             match receiver.await {
                 Ok(result) => {
                     if let Some(byte_string) = result {
-                        Self::upload_byte_string(state, byte_string).await;
+                        let (sender, receiver) = oneshot::channel::<Option<String>>();
+                        *state.contract_id_sender.borrow_mut() = Some(sender);
+                        WalletMsg::Request(WalletRequest::ContractUpload(byte_string)).post();
+
+                        if let Some(id) = receiver.await.ok().and_then(|result| result) {
+                            log::info!("GOT CONTRACT ID: {}", id);
+                        } else {
+                            web_sys::window().unwrap_ext().alert_with_message("unable to upload contract!");
+                        }
                     }
                 },
                 _ => { }
@@ -50,15 +58,20 @@ impl Registry {
         }));
     }
 
-    async fn upload_byte_string(state: Rc<Self>, byte_string:String) {
-        match TERRA.upload_contract(&byte_string).await {
-            Ok(contract_id) => {
-                log::info!("got contract id: {}", contract_id);
+    pub fn handle_wallet_message(state: Rc<Self>, msg: WalletMsg) {
+        match msg {
+            WalletMsg::Response(resp) => {
+                match resp {
+                    WalletResponse::ContractUpload(id) => {
+                        if let Some(sender) = state.contract_id_sender.borrow_mut().take() {
+                            sender.send(id);
+                        }
+                    },
+                    _ => {}
+                }
             },
-            Err(error) => {
-                log::error!("{}", error);
-                web_sys::window().unwrap_ext().alert_with_message("unable to upload contract (see logs)!");
-            }
+            _ => {}
+
         }
     }
 }

@@ -12,8 +12,8 @@
 
 ## Technical
 * Shared native Rust types across the stack for catching errors at compile-time
-* Frontend application is mostly pure Rust/WebAssembly, written in the Dominator framework
-* Bails out to JS for third-party integrations as needed (i.e. Terra.js)
+* Frontend main application is pure Rust/WebAssembly, written in the Dominator framework
+* Wallet is handled via a (usually) hidden iframe and a postMessage communication layer
 * No backend required, the `user wallet` <-> `user contract id` mapping is stored on the chain via a pre-instantiated separate contract
 * Documentation of the shared data structures is generated automatically and browseable online
 * Continuous Integration/Deployment of frontend via Github Actions
@@ -29,11 +29,14 @@
 2. install wasm-opt via [binaryen releases](https://github.com/WebAssembly/binaryen/releases) and put it somewhere on your path
 3. copy `.env.sample` to `.env` change whatever values 
 4. `npm install`
+5. in `frontend/iframe` also `npm install`
 
 
-## Frontend dev 
+## Frontend dev
 
 - `cargo make frontend`
+
+This will start both the main app and the iframe in parallel, as well as open a browser tab for each individually (though the iframe is typically meant to be hidden)
 
 ## Contract building 
 

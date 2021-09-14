@@ -17,6 +17,9 @@ impl Login {
     pub fn render(state: Rc<Self>) -> Dom {
         html!("div", {
             .class(&*styles::PAGE)
+            .child(html!("h1", {
+                .text("Login with Terra Station")
+            }))
             .child(html!("div", {
                 .class(&*styles::CHOICES)
                 .children(&mut [
@@ -30,8 +33,7 @@ impl Login {
                                 .child(html!("div", {
                                     .class(&*styles::BUTTON_MULTI_LINE)
                                     .children(&mut [
-                                        html!("div", {.text("Login via") }),
-                                        html!("div", {.text("Terra Station") }),
+                                        html!("div", {.text("Chrome Browser") }),
                                         html!("div", {.text("Extension") }),
                                     ])
                                 }))
@@ -39,8 +41,25 @@ impl Login {
 
                     html!("h1", {
                         .text("-- OR --")
+                        .style("text-align", "center")
                         .style("opacity", "0.7")
                     }),
+                    Button::new_color(ButtonColor::Red, "")
+                        .render_mixin(clone!(state => move |dom| {
+                            dom
+                                .style("margin-top", "10rem")
+                                .event(clone!(state => move |evt:events::Click| {
+                                    Self::do_login_mobile(state.clone());
+                                }))
+                                .child(html!("div", {
+                                    .class(&*styles::BUTTON_MULTI_LINE)
+                                    .children(&mut [
+                                        html!("div", {.text("Mobile") }),
+                                        html!("div", {.text("Qr Code") }),
+                                    ])
+                                }))
+                        })),
+                    /*
                     html!("div", {
                         .class(&*styles::MNEMONIC)
                         .children(&mut [
@@ -82,6 +101,7 @@ impl Login {
                                 }))
                         ])
                     }),
+                    */
 
                 ])
             }))

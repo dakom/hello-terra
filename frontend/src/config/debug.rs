@@ -18,8 +18,8 @@ pub struct Debug {
 impl Debug {
     pub fn local() -> Self {
         Self {
-            wallet_mnemonic: env_var("DEBUG_WALLET_MNEMONIC").ok(),
-            //wallet_id: None, 
+            //wallet_mnemonic: env_var("DEBUG_WALLET_MNEMONIC").ok(),
+            wallet_mnemonic: None,
         }
     }
 }

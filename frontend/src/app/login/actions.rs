@@ -17,9 +17,11 @@ impl Login {
     }
 
     pub fn do_login_extension(state: Rc<Self>) {
-
-        state.loader.load(clone!(state => async move {
-        }));
+        WalletMsg::Setup(WalletSetup::ConnectExtension).post();
+    }
+    pub fn do_login_mobile(state: Rc<Self>) {
+        state.app.iframe_visible.set_neq(true);
+        WalletMsg::Setup(WalletSetup::ConnectMobile).post();
     }
     pub fn clear_input_error(&self) {
         self.input_error.set_neq(None);

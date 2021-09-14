@@ -1,14 +1,10 @@
 import rust from "@wasm-tool/rollup-plugin-rust";
 import serve from "rollup-plugin-serve";
 import livereload from "rollup-plugin-livereload";
-import nodeResolve from "@rollup/plugin-node-resolve";
 import copy from "rollup-plugin-copy-watch";
 import injectProcessEnv from 'rollup-plugin-inject-process-env';
 import { terser } from "rollup-plugin-terser";
-import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
 import path from "path";
-import nodePolyfills from 'rollup-plugin-polyfill-node';
 
 require('dotenv').config({path:path.resolve('./.env')})
 
@@ -22,19 +18,10 @@ export default {
     output: {
         dir: `./dist/frontend`,
         format: "iife",
-        sourcemap: DEV
+        sourcemap: DEV,
     },
     context: "window",
     plugins: getPlugins(),
-    external: [
-        "react-is",
-        "react",
-        "styled-components",
-        "react-dom",
-        "react/jsx-runtime",
-        "@terra-money/terra.js",
-        "qrcode.react",
-    ]
 };
 
 function getPlugins() {
@@ -44,33 +31,24 @@ function getPlugins() {
         `./frontend/**/*`,
     ].map(x => path.resolve(x));
 
+    const cargoArgs = ["--features", process.env.REMOTE_TARGET];
+
+    const copyArgs = {
+        targets: [{ src: "./frontend/public/**/*", dest: `./dist/frontend/` }]
+    };
+    if(DEV) {
+        Object.assign(copyArgs, { watch: "public" });
+    }
+
     const plugins = [
-        //json(),
-        //nodePolyfills( /* options */ ),
-        nodeResolve(),
-        commonjs(),
-        copy({
-            watch: "public",
-            targets: [{ src: "./frontend/public/**/*", dest: `./dist/frontend/` }],
-        }),
+        copy(copyArgs),
         rust({
             serverPath: `/`,
             watch: DEV,
             debug: DEV,
             watchPatterns,
-            cargoArgs: ["--features", process.env.REMOTE_TARGET],
+            cargoArgs
         }),
-        /*
-        json(),
-        nodeResolve({ 
-            //module: false, // <-- this library is not an ES6 module
-			//browser: true, 
-            //preferBuiltins: true,
-        }),
-		commonjs({
-            //transformMixedEsModules: true
-        }),
-        */
         injectProcessEnv({
             REMOTE_TARGET: process.env.REMOTE_TARGET,
             MEDIA_DEV_PORT: process.env.MEDIA_DEV_PORT,
