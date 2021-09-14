@@ -47,7 +47,7 @@ function getPlugins() {
     const plugins = [
         copy(copyArgs),
         rust({
-            serverPath: `/`,
+            serverPath: DEV ? `/`: '/hello-terra/',
             watch: DEV,
             debug: DEV,
             watchPatterns,
