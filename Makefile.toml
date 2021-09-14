@@ -20,7 +20,42 @@ env_files = ["./.env"]
 ##########################
 [tasks.make-paths]
 script_runner = "@duckscript"
-script = ["mkdir ./dist/contracts"] 
+script = ["mkdir ./frontend/media/contracts"] 
+
+##########################
+##  HIGH-LEVEL ALL      ##
+##########################
+
+[tasks.build-release]
+run_task = { name = [
+    "frontend-build",
+    "contracts-build-release",
+    "build-copy-files",
+]}
+
+[tasks.frontend-build]
+run_task = { name = [
+    "frontend-build-npm",
+    "frontend-build-iframe-npm",
+]}
+
+[tasks.contracts-build-release]
+run_task = { name = [
+    "contract-registry-build-release",
+]}
+
+[tasks.contracts-test]
+run_task = { name = [
+    "contract-registry-test",
+]}
+
+[tasks.build-copy-files]
+script_runner = "@shell"
+script = '''
+cp ./dist/frontend/index.html ./dist/frontend/404.html
+cp -R ./frontend/iframe/build/ ./dist/frontend/iframe/
+cp -R ./frontend/media/ ./dist/frontend/media/
+''' 
 
 ##########################
 ##  FRONTEND            ##
@@ -48,11 +83,6 @@ script = ["npm start"]
 cwd = "./frontend/iframe"
 
 ## Build
-[tasks.frontend-build]
-run_task = { name = [
-    "frontend-build-npm",
-    "frontend-build-iframe-npm",
-]}
 
 [tasks.frontend-build-npm]
 script_runner = "@shell"
@@ -68,19 +98,25 @@ cwd = "./frontend/iframe"
 ##  CONTRACT - REGISTRY ##
 ##########################
 
-[tasks.contract-registry-release]
+[tasks.contract-registry-build-release]
 run_task = { name = [
     "make-paths",
-    "contract-registry-release-build",
-    "contract-registry-release-optimize",
+    "contract-registry-compile-release",
+    "contract-registry-optimize-release",
+    "contract-registry-hash-release",
 ]}
 
-[tasks.contract-registry-release-build]
+[tasks.contract-registry-compile-release]
 command = "cargo"
 args = ["build", "--release", "--target", "wasm32-unknown-unknown", "--locked"]
 cwd = "./contracts/registry"
 env = { RUSTFLAGS = "-C link-arg=-s" }
 
-[tasks.contract-registry-release-optimize]
+[tasks.contract-registry-optimize-release]
 command = "wasm-opt"
-args = ["-Os", "./target/wasm32-unknown-unknown/release/contract_registry.wasm", "-o", "./dist/contracts/contract-registry.wasm"] 
+args = ["-Os", "./target/wasm32-unknown-unknown/release/contract_registry.wasm", "-o", "./frontend/media/contracts/contract-registry.wasm"] 
+
+
+[tasks.contract-registry-hash-release]
+script_runner = "@shell"
+script = ["b3sum --no-names ./frontend/media/contracts/contract-registry.wasm > ./frontend/media/contracts/contract-registry-hash.txt"] 

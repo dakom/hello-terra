@@ -17,7 +17,7 @@
 * Native Rust types for message payloads - enforces contract/frontend match eachother _at compile-time_
 * Frontend main application is pure Rust/WebAssembly, written in the Dominator framework (declarative, fast, and awesome)
 * Wallet is handled via a (usually) hidden iframe and a postMessage communication layer
-* Detecting and deploying a new contract is done automatically via hash id and localstorage lookup
+* Detecting and deploying a new contract is done automatically via Blake3 hash, id, and localstorage lookup
 * Documentation of the shared data structures is generated automatically and browseable online
 * Continuous Integration/Deployment of frontend via Github Actions
 * Good DX (live-reloads when sources change, cross-platform, simple commands, separate local vs. release settings, workspace, etc.)
@@ -38,10 +38,14 @@ This does have one downside - the typescript and Rust types for the high-level c
 ## Bootstrapping / one-time setup
 
 1. Install required tooling (rust, npm, cargo make)
-2. install wasm-opt via [binaryen releases](https://github.com/WebAssembly/binaryen/releases) and put it somewhere on your path
-3. copy `.env.sample` to `.env` change whatever values 
-4. `npm install`
-5. in `frontend/iframe` also `npm install`
+    - rust
+    - npm
+    - cargo make: cargo install cargo-make
+    - b3sum: cargo install b3sum
+    - wasm-opt: download at [binaryen releases](https://github.com/WebAssembly/binaryen/releases) and put it somewhere on your path
+2. copy `.env.sample` to `.env` change whatever values 
+3. `npm install`
+4. in `frontend/iframe` also `npm install`
 
 
 ## Frontend dev
@@ -52,7 +56,12 @@ This will start the main app, the iframe app, and the media server in parallel, 
 
 ## Contract building 
 
-- `cargo make contract-registry-release`
+- `cargo make contracts-build-release`
+
+This will compile, optimize, and generate a hash file for the contracts.
+The output will be in `./frontend/media/contracts/`
+
+However this is .gitignored for CI
 
 Running this with the frontend dev simultaneously will cause a "new system" flow live
 
@@ -60,4 +69,9 @@ Currently, this project isn't setup for contract migrations
 
 ## Contract testing 
 
-- `cargo make contract-registry-test`
+- `cargo make contracts-test`
+
+# CI Setup
+
+1. replace `dakom` in `.github/workflows/build.yml` with your github username
+2. create/add `GH_PAT` to your repo's secrets (it's a github deployment token [for deploying to gh_pages](https://github.com/maxheld83/ghpages/pull/18))
