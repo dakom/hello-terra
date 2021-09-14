@@ -44,7 +44,7 @@ jobs:
     - name: Cache cargo build
       uses: actions/cache@v1
       with:
-        path: demo/target
+        path: target
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
     # Latest release doesn't have binary...
@@ -68,7 +68,7 @@ jobs:
       uses: actions/setup-node@v1
 
     - name: install npm deps
-      run: cd demo && npm ci
+      run: npm ci
 
     - name: install rust nightly
       run: rustup toolchain install nightly
