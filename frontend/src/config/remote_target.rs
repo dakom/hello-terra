@@ -36,8 +36,8 @@ impl RemoteTarget {
 
     pub fn iframe_url(&self) -> &'static str {
         match self {
-            Self::Local => "http://localhost:3000/",
-            Self::Release => "/hello-terra/iframe/",
+            Self::Local => "http://localhost:3000",
+            Self::Release => "/hello-terra/iframe",
         }
     }
 
@@ -50,7 +50,7 @@ impl RemoteTarget {
     pub fn media_url(&self) -> String {
         match self {
             Self::Local=> format!("http://localhost:{}", self.media_port()),
-            Self::Release => "https://media.example.org".to_string(),
+            Self::Release => "/hello-terra/media".to_string(),
         }
     }
 }
