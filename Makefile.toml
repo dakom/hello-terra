@@ -41,12 +41,12 @@ run_task = { name = [
 
 [tasks.contracts-build-release]
 run_task = { name = [
-    "contract-registry-build-release",
+    "contract-account-build-release",
 ]}
 
 [tasks.contracts-test]
 run_task = { name = [
-    "contract-registry-test",
+    "contract-account-test",
 ]}
 
 [tasks.build-copy-files]
@@ -98,25 +98,25 @@ cwd = "./frontend/iframe"
 ##  CONTRACT - REGISTRY ##
 ##########################
 
-[tasks.contract-registry-build-release]
+[tasks.contract-account-build-release]
 run_task = { name = [
     "make-paths",
-    "contract-registry-compile-release",
-    "contract-registry-optimize-release",
-    "contract-registry-hash-release",
+    "contract-account-compile-release",
+    "contract-account-optimize-release",
+    "contract-account-hash-release",
 ]}
 
-[tasks.contract-registry-compile-release]
+[tasks.contract-account-compile-release]
 command = "cargo"
 args = ["build", "--release", "--target", "wasm32-unknown-unknown", "--locked"]
-cwd = "./contracts/registry"
+cwd = "./contracts/account"
 env = { RUSTFLAGS = "-C link-arg=-s" }
 
-[tasks.contract-registry-optimize-release]
+[tasks.contract-account-optimize-release]
 command = "wasm-opt"
-args = ["-Os", "./target/wasm32-unknown-unknown/release/contract_registry.wasm", "-o", "./frontend/media/contracts/contract-registry.wasm"] 
+args = ["-Os", "./target/wasm32-unknown-unknown/release/contract_account.wasm", "-o", "./frontend/media/contracts/contract-account.wasm"] 
 
 
-[tasks.contract-registry-hash-release]
+[tasks.contract-account-hash-release]
 script_runner = "@shell"
-script = ["b3sum --no-names ./frontend/media/contracts/contract-registry.wasm > ./frontend/media/contracts/contract-registry-hash.txt"] 
+script = ["b3sum --no-names ./frontend/media/contracts/contract-account.wasm > ./frontend/media/contracts/contract-account-hash.txt"] 

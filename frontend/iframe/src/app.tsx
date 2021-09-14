@@ -37,9 +37,11 @@ function WalletManager() {
       disconnect,
     } = wallet;
 
+    console.log(network);
+
     useEffect(() => {
 
-      const lcd = wallets.length > 0 
+      const _lcd = wallets.length > 0 
         ? new LCDClient({
               URL: wallet.network.lcd,
               chainID: wallet.network.chainID,
@@ -50,8 +52,8 @@ function WalletManager() {
 
       //Guards to make sure we're always working with a valid wallet
       const withWallet = (f: ((walletState:WalletState) => any)) => {
-        if(lcd != null) {
-           return f({lcd, wallet, addr: wallet.wallets[0].terraAddress});
+        if(_lcd != null) {
+           return f({lcd: _lcd, wallet, addr: wallet.wallets[0].terraAddress});
         } else {
           //Will always effectively logout (i.e. response to "get id" without an id
           postWalletReponse({kind: WalletResponseKind.Addr});
@@ -99,8 +101,8 @@ function WalletManager() {
             const {data, kind} = msg.data;
             switch(kind) {
               case WalletRequestKind.Addr: {
-                withWallet(({addr}) => {
-                  postWalletReponse({kind: WalletResponseKind.Addr, data: addr});
+                withWallet(({wallet, addr}) => {
+                  postWalletReponse({kind: WalletResponseKind.Addr, data: {addr, network_name: wallet.network.name, chain_id: wallet.network.chainID}});
                 });
               }
               break;
@@ -150,7 +152,7 @@ function WalletManager() {
         window.removeEventListener("message", onMessage);
         window.removeEventListener("click", onClick);
       }
-    }, [wallets]);
+    }, [wallet, wallets]);
 
     useEffect(() => {
       postWalletStatus(status);

@@ -18,9 +18,9 @@ impl Header {
             .child(html!("div", {
                 .class(&*styles::TOP_RIGHT)
                 .children_signal_vec(
-                    state.app.wallet_addr.signal_ref(clone!(state => move |wallet_addr| {
+                    state.app.wallet_info.signal_ref(clone!(state => move |wallet_info| {
                         let mut children:Vec<Dom> = Vec::new();
-                        if wallet_addr.is_some() {
+                        if wallet_info.is_some() {
                             children.push(
                                 Button::new_color(ButtonColor::Blue, "Disconnect")
                                     .render_mixin(clone!(state => move |dom| {

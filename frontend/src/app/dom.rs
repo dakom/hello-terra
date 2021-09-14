@@ -19,14 +19,14 @@ impl App {
         html!("main", {
             .class(&*styles::MAIN) 
             .child(Header::render(Header::new(state.clone())))
-            .child_signal(state.wallet_contract_init_signal().map(clone!(state => move |(is_initializing, wallet_addr, contract_addr)| {
+            .child_signal(state.wallet_contract_init_signal().map(clone!(state => move |(is_initializing, wallet_info, contract_info)| {
                 if is_initializing {
                     Some(Overlay::new().render_loader())
                 } else {
-                    match (wallet_addr, contract_addr) {
+                    match (wallet_info, contract_info) {
                         (None, _) => Some(Login::render(Login::new(state.clone()))),
-                        (Some(wallet_addr), None) => Some(Registry::render(Registry::new(wallet_addr, state.clone()))),
-                        (Some(wallet_addr), Some(contract_addr)) => Some(Account::render(Account::new(wallet_addr, contract_addr, state.clone()))),
+                        (Some(wallet_info), None) => Some(Registry::render(Registry::new(wallet_info, state.clone()))),
+                        (Some(wallet_info), Some(contract_info)) => Some(Account::render(Account::new(wallet_info, contract_info, state.clone()))),
                         _ => panic!("can't have a contract without a wallet!")
                     }
                 }

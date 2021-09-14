@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 [dependencies]
 # Common deps
 shared = { path = "../shared", features=["frontend"] }
-contract_registry = { path = "../contracts/registry", default-features = false, features=["frontend"] }
+contract_account = { path = "../contracts/account", default-features = false, features=["frontend"] }
 wasm-logger = { version = "0.2.0", optional = true }
 wee_alloc = { version = "0.4.5", optional = true }
 console_error_panic_hook = { version = "0.1.6", optional = true }
@@ -62,5 +62,5 @@ base64 = "0.13.0"
 [features]
 quiet = []
 default = ["wee_alloc"]
-local = ["quiet", "wasm-logger", "console_error_panic_hook", "shared/local", "contract_registry/local"]
-release = ["shared/release", "contract_registry/release"]
+local = ["quiet", "wasm-logger", "console_error_panic_hook", "shared/local", "contract_account/local"]
+release = ["shared/release", "contract_account/release"]

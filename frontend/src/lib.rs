@@ -1,4 +1,5 @@
 #![allow(warnings)]
+#![feature(async_closure)]
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]

@@ -4,23 +4,23 @@ use web_sys::HtmlInputElement;
 use futures::channel::oneshot::Sender;
 use crate::app::App;
 use futures_signals::signal::Mutable;
+use crate::utils::prelude::*;
 
 pub struct Registry {
-    pub wallet_addr: String,
+    pub wallet_info: WalletInfo,
     pub app: Rc<App>,
+    pub contract_hash: Mutable<Option<String>>,
     pub file_input: RefCell<Option<HtmlInputElement>>,
     pub loader: AsyncLoader,
     pub contract_id: Mutable<Option<String>>,
-    pub msg_sender: RefCell<Option<Sender<Option<String>>>>
+    pub msg_sender: RefCell<Option<Sender<Option<String>>>>,
 }
 
 impl Registry {
-    pub fn new(wallet_addr: String, app: Rc<App>) -> Rc<Self> {
-
-        log::warn!("TODO - load contract Hash->ID from LocalStorage");
-
+    pub fn new(wallet_info: WalletInfo, app: Rc<App>) -> Rc<Self> {
         Rc::new(Self {
-            wallet_addr,
+            wallet_info,
+            contract_hash: Mutable::new(None),
             contract_id: Mutable::new(None),
             app,
             file_input: RefCell::new(None),

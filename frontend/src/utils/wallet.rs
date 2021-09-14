@@ -85,8 +85,15 @@ pub enum WalletRequest {
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "kind", content = "data")]
 pub enum WalletResponse {
-    Addr(Option<String>),
+    Addr(Option<WalletInfo>),
     ContractUpload(Option<String>),
+}
+#[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub struct WalletInfo {
+    pub addr: String,
+    pub chain_id: String,
+    pub network_name: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]

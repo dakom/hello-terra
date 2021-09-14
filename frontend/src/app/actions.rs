@@ -13,11 +13,11 @@ impl App {
                 match status {
                     WalletStatus::Initializing | WalletStatus::Wallet_Not_Connected => {
                         state.initializing.set_neq(status == WalletStatus::Initializing); 
-                        state.wallet_addr.set_neq(None);
-                        state.contract_addr.set_neq(None);
+                        state.wallet_info.set(None);
+                        state.contract_info.set(None);
                     },
                     WalletStatus::Wallet_Connected => {
-                        if state.wallet_addr.lock_ref().is_none() {
+                        if state.wallet_info.lock_ref().is_none() {
                             state.initializing.set_neq(true);
                             WalletMsg::Request(WalletRequest::Addr).post();
                         } else {
@@ -36,10 +36,10 @@ impl App {
             },
             WalletMsg::Response(resp) => {
                 match resp {
-                    WalletResponse::Addr(addr) => {
-                        match addr {
-                            Some(addr) => {
-                                state.wallet_addr.set(Some(addr));
+                    WalletResponse::Addr(info) => {
+                        match info{
+                            Some(info) => {
+                                state.wallet_info.set(Some(info));
                                 state.initializing.set_neq(false);
                             },
                             None => {

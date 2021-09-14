@@ -3,5 +3,6 @@ pub use super::{
     mixin::*,
     events,
     iframe::*,
-    wallet::*
+    wallet::*,
+    contract::*,
 };

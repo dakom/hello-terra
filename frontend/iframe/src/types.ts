@@ -89,7 +89,7 @@ export enum WalletResponseKind {
 
 export type WalletResponseAddr = {
   kind: WalletResponseKind.Addr,
-  data?: string
+  data?: { addr: string, network_name: string, chain_id: string}
 }
 
 export type WalletResponseContractUpload = {

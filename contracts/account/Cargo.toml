@@ -1,7 +1,7 @@
 [package]
-name = "contract_registry"
+name = "contract_account"
 version = "0.1.0"
-description = "Registry Contract"
+description = "Account Contract"
 authors = ["David Komer <david.komer@gmail.com>"]
 readme = "README.md"
 license = "MIT"

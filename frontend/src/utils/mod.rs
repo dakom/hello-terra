@@ -6,3 +6,5 @@ pub mod mixin;
 pub mod events;
 pub mod iframe;
 pub mod wallet;
+pub mod contract;
+pub mod storage;
