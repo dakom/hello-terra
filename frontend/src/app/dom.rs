@@ -1,13 +1,10 @@
 use dominator::{html, Dom, clone};
 use std::rc::Rc;
 use futures_signals::signal::SignalExt;
-use crate::{
-    components::{
+use crate::{components::{
         overlay::Overlay,
         header::Header,
-    },
-    utils::prelude::*
-};
+    }, config::REMOTE_TARGET, utils::prelude::*};
 
 use super::{
     state::*, 
@@ -35,7 +32,7 @@ impl App {
                 }
             })))
             .child(html!("iframe" => web_sys::HtmlIFrameElement, {
-                .attribute("src", "http://localhost:3000/")
+                .attribute("src", REMOTE_TARGET.iframe_url())
                 .after_inserted(|elem| {
                     WALLET_IFRAME.with(|iframe| *iframe.borrow_mut() = Some(elem));
                 })

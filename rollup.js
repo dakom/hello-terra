@@ -29,7 +29,7 @@ function getPlugins() {
         `./contracts/**/*`,
         `./shared/**/*`,
         `./frontend/media/**/*`,
-        `./frontend/public/**/*`,
+        `./frontend/*.html`,
         `./frontend/iframe/src/**/*`,
         `./frontend/src/**/*`,
         `./frontend/Cargo.toml`,
@@ -38,10 +38,20 @@ function getPlugins() {
     const cargoArgs = ["--features", process.env.REMOTE_TARGET];
 
     const copyArgs = {
-        targets: [{ src: "./frontend/public/**/*", dest: `./dist/frontend/` }]
+        targets: [{
+            src: './frontend/index.html',
+            dest: 'dist/frontend',
+            transform: (contents, filename) => {
+                const appJs = DEV ? "/app.js" : "/hello-terra/app.js"
+                return contents.toString().replace('__APP_JS__', appJs);
+            }
+        }]
     };
+
     if(DEV) {
-        Object.assign(copyArgs, { watch: "public" });
+        Object.assign(copyArgs, { 
+            watch: "./frontend/*.html" 
+        });
     }
 
     const plugins = [

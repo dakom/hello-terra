@@ -8,6 +8,7 @@
     "coverage": "react-scripts test --coverage",
     "precommit": "lint-staged"
   },
+  "homepage": ".",
   "lint-staged": {
     "src/{**/*,*}/*.{ts,tsx}": [
       "cross-env CI=true react-scripts test --colors --findRelatedTests"

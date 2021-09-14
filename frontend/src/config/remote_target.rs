@@ -34,6 +34,12 @@ impl RemoteTarget {
         } 
     }
 
+    pub fn iframe_url(&self) -> &'static str {
+        match self {
+            Self::Local => "http://localhost:3000/",
+            Self::Release => "/hello-terra/iframe/",
+        }
+    }
 
     pub fn media_port(&self) -> u32 {
         match env_var("MEDIA_DEV_PORT") {
