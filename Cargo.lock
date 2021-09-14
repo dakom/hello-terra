@@ -10,7 +10,6 @@ dependencies = [
  "base64",
  "cfg-if 1.0.0",
  "console_error_panic_hook",
- "contract_account",
  "contract_registry",
  "dominator",
  "dominator_helpers",
@@ -125,19 +124,6 @@ name = "const-oid"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "44c32f031ea41b4291d695026c023b95d59db2d8a2c7640800ed56bc8f510f22"
-
-[[package]]
-name = "contract_account"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "schemars",
- "serde",
- "shared",
- "terra-cosmwasm",
-]
 
 [[package]]
 name = "contract_registry"
