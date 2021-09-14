@@ -70,6 +70,10 @@ jobs:
     - name: install npm deps
       run: npm ci
 
+    - name: install npm deps for iframe
+      run: npm ci
+      working-directory: ./frontend/iframe
+
     - name: install rust nightly
       run: rustup toolchain install nightly
 
@@ -90,6 +94,13 @@ jobs:
 
     - name: build for release 
       run: cargo make build-release 
+
+    - name: build shared docs
+      run: cargo doc --no-deps
+      working-directory: ./shared
+    
+    - name: copy shared docs
+      run: cp -R target/doc ./dist/frontend/docs
 
     - name: deploy to gh_pages
       uses: maxheld83/ghpages@master
