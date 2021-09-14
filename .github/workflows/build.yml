@@ -47,10 +47,14 @@ jobs:
         path: demo/target
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: download binaryen release
-      run: curl -u dakom:"$GITHUB_TOKEN" -s https://api.github.com/repos/WebAssembly/binaryen/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | xargs -I {} wget -c https://github.com/WebAssembly/binaryen/releases/latest/download/binaryen-{}-x86_64-linux.tar.gz -O binaryen.tgz
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Latest release doesn't have binary...
+    # - name: download binaryen release
+    #   run: curl -u dakom:"$GITHUB_TOKEN" -s https://api.github.com/repos/WebAssembly/binaryen/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | xargs -I {} wget -c https://github.com/WebAssembly/binaryen/releases/latest/download/binaryen-{}-x86_64-linux.tar.gz -O binaryen.tgz
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: download binaryen release 
+      run: wget -c https://github.com/WebAssembly/binaryen/releases/download/version_101/binaryen-version_101-x86_64-linux.tar.gz -O binaryen.tgz
 
     - name: extract binaryen to folder 
       run: mkdir binaryen && tar -zxvf ./binaryen.tgz -C binaryen --strip-components 1
