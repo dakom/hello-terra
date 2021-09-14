@@ -28,7 +28,11 @@ function getPlugins() {
     const watchPatterns = [
         `./contracts/**/*`,
         `./shared/**/*`,
-        `./frontend/**/*`,
+        `./frontend/media/**/*`,
+        `./frontend/public/**/*`,
+        `./frontend/iframe/src/**/*`,
+        `./frontend/src/**/*`,
+        `./frontend/Cargo.toml`,
     ].map(x => path.resolve(x));
 
     const cargoArgs = ["--features", process.env.REMOTE_TARGET];
@@ -52,9 +56,6 @@ function getPlugins() {
         injectProcessEnv({
             REMOTE_TARGET: process.env.REMOTE_TARGET,
             MEDIA_DEV_PORT: process.env.MEDIA_DEV_PORT,
-			TERRA_DEV_PORT: process.env.TERRA_DEV_PORT,
-			DEBUG_WALLET_MNEMONIC: process.env.DEBUG_WALLET_MNEMONIC,
-			DEBUG_WALLET_ID: process.env.DEBUG_WALLET_ID,
         }),
     ];
 

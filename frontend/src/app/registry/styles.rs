@@ -21,3 +21,18 @@ pub const CHOICES:Lazy<String> = Lazy::new(|| {
         .style("gap", "10rem")
     }
 });
+
+pub const CHOICE:Lazy<String> = Lazy::new(|| {
+    class! {
+        .style("display", "flex")
+        .style("flex-direction", "column")
+        .style("justify-content", "center")
+        .style("align-items", "center")
+    }
+});
+pub const CHOICE_LABEL:Lazy<String> = Lazy::new(|| {
+    class! {
+        .style("font-size", "12rem")
+        .style("margin-bottom", "10rem")
+    }
+});

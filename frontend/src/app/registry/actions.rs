@@ -1,7 +1,7 @@
 use std::{rc::Rc, cell::RefCell};
 use super::state::*;
 use web_sys::{File, FileReader};
-use crate::utils::{prelude::*, terra::TERRA};
+use crate::utils::prelude::*;
 use gloo_events::EventListener;
 use dominator::clone;
 use futures::channel::oneshot;
@@ -43,11 +43,12 @@ impl Registry {
                 Ok(result) => {
                     if let Some(byte_string) = result {
                         let (sender, receiver) = oneshot::channel::<Option<String>>();
-                        *state.contract_id_sender.borrow_mut() = Some(sender);
+                        *state.msg_sender.borrow_mut() = Some(sender);
                         WalletMsg::Request(WalletRequest::ContractUpload(byte_string)).post();
 
                         if let Some(id) = receiver.await.ok().and_then(|result| result) {
-                            log::info!("GOT CONTRACT ID: {}", id);
+                            log::warn!("TODO - set contract Hash->ID in LocalStorage");
+                            state.contract_id.set(Some(id));
                         } else {
                             web_sys::window().unwrap_ext().alert_with_message("unable to upload contract!");
                         }
@@ -63,7 +64,7 @@ impl Registry {
             WalletMsg::Response(resp) => {
                 match resp {
                     WalletResponse::ContractUpload(id) => {
-                        if let Some(sender) = state.contract_id_sender.borrow_mut().take() {
+                        if let Some(sender) = state.msg_sender.borrow_mut().take() {
                             sender.send(id);
                         }
                     },

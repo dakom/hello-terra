@@ -18,11 +18,11 @@ impl Header {
             .child(html!("div", {
                 .class(&*styles::TOP_RIGHT)
                 .children_signal_vec(
-                    state.app.wallet_id.signal_ref(clone!(state => move |wallet_id| {
+                    state.app.wallet_addr.signal_ref(clone!(state => move |wallet_addr| {
                         let mut children:Vec<Dom> = Vec::new();
-                        if wallet_id.is_some() {
+                        if wallet_addr.is_some() {
                             children.push(
-                                Button::new_color(ButtonColor::Blue, "Logout")
+                                Button::new_color(ButtonColor::Blue, "Disconnect")
                                     .render_mixin(clone!(state => move |dom| {
                                         dom.event(clone!(state => move |evt:events::Click| {
                                             state.app.logout();

@@ -1,7 +1,6 @@
 use std::fmt;
 use dominator::stylesheet;
 use cfg_if::cfg_if;
-use shared::config::RemoteTarget;
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 use dotenv::dotenv;

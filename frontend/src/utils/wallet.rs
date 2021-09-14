@@ -1,3 +1,7 @@
+/// A messaging system for interacting with the iframe wallet manager
+/// The types must be kept in sync manually with the React/iframe side
+/// However, they are fairly generic - adding new contract message payloads is purely in Rust
+
 use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -73,7 +77,7 @@ pub enum WalletSetup{
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "kind", content = "data")]
 pub enum WalletRequest {
-    Id,
+    Addr,
     ContractUpload(String),
 }
 
@@ -81,7 +85,7 @@ pub enum WalletRequest {
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "kind", content = "data")]
 pub enum WalletResponse {
-    Id(Option<String>),
+    Addr(Option<String>),
     ContractUpload(Option<String>),
 }
 

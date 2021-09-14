@@ -105,13 +105,6 @@ impl Login {
 
                 ])
             }))
-            .child_signal(state.loader.is_loading().map(|is_loading| {
-                if is_loading {
-                    Some(Overlay::new().render_loader())
-                } else {
-                    None
-                }
-            }))
         })
     }
 }
