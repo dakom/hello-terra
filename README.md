@@ -1,27 +1,26 @@
 # Hello Terra 
 
-~~# [LIVE APP](http://example.com) / [CRATE DOCS](http://example.com)~~
+# [LIVE DEMO](https://dakom.github.io/hello-terra)
+# [SHARED CRATE DOCS](https://dakom.github.io/hello-terra/docs/shared)
 
 # GOALS
 
 ## User Experience
 * Login via Terra Station chrome extension or mobile app
 * No other auth or database (state is persisted on-chain, contract addresses are stored locally in-browser)
-* Reactive to live changes on the network 
+* Reactive to live changes on the network (correct balance shown in multiple tabs)
 * Simple bootstrapping for new system (no need for user to manually compile/select .wasm files) 
 * Simple fake bank account (deposit, withdraw, view balance)
 
 # Technical
 
-* No need or use for JSON schema (real cargo docs!)
-* Native Rust types for message payloads - enforces contract/frontend match eachother _at compile-time_
+* No need or use for JSON schema (real cargo docs - see above)
+* Native Rust types for message payloads enfoced _at compile-time_ (contracts and frontend are guaranteed to typecheck with eachother) 
 * Frontend main application is pure Rust/WebAssembly, written in the Dominator framework (declarative, fast, and awesome)
-* Wallet is handled via a (usually) hidden iframe and a postMessage communication layer
+* Wallet is handled via a (usually) hidden iframe and a postMessage communication layer (can be abstracted/expanded)
 * Detecting and deploying a new contract is done automatically via Blake3 hash, id, and localstorage lookup
-* Documentation of the shared data structures is generated automatically and browseable online
-* Continuous Integration/Deployment of frontend via Github Actions
+* Continuous Integration/Deployment of full app via Github Actions (live demo - see above)
 * Good DX (live-reloads when sources change, cross-platform, simple commands, separate local vs. release settings, workspace, etc.)
-* Reduce finicky dependencies where possible
 
 ## Iframe / Wallet abstraction
 
@@ -31,7 +30,7 @@ So instead of wrangling this into the core application, it's separated out into 
 
 Having this abstraction is also theoretically nice since it can allow adding new wallet providers or dealing with different chains across a generic API
 
-This does have one downside - the typescript and Rust types for the high-level communication wrappers need to be kept in sync. However, This is only needed for these wrappers, not each request/response type. For example - adding new contract message payloads doesn't require any further work (it's all kept in Rust and the wallet is oblivious to the on-the-wire json format). Adding more Terra.JS functionality like Bank Queries and whatnot would only need to be done once.
+This does have one downside - the typescript and Rust types for the high-level communication wrappers need to be kept in sync. However, This is only needed for these wrappers, not each message use-case. For example, adding new contract message request/response payloads doesn't require any further work (it's all kept in Rust and the wallet is oblivious to the on-the-wire json format). Adding more Terra.JS functionality like Bank Queries and whatnot would only need to be done once.
 
 # Local Development
 

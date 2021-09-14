@@ -62,7 +62,7 @@ jobs:
     - name: add binaryen to path
       uses: dakom/actions-path@master
       with:
-        path: ${{github.workspace}}/binaryen
+        path: ${{github.workspace}}/binaryen/bin
 
     - name: install node
       uses: actions/setup-node@v1
