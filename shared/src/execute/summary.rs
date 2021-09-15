@@ -1,13 +1,14 @@
-use serde::{Serialize, Deserialize};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// Initialization request to get the initial
 /// summary of all the funds
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct FullSummaryRequest {
 }
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct FullSummaryResponse {
     /// amount of money in the wallet
     /// not specific to this app, rather it's across the whole chain

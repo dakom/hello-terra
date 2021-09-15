@@ -50,6 +50,7 @@ export function contractInstantiate(walletState:WalletState, msg:MsgInstantiateC
         })
 }
 export function contractExecute(walletState:WalletState, msg:MsgExecuteContract):Promise<string> {
+    console.log("posting", msg.toJSON());
     return walletState.wallet.post({ 
         //fee: new StdFee(10000, '20000uusd'),
         msgs: [msg] 

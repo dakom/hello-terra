@@ -6,7 +6,9 @@ use std::fmt::Debug;
 use super::coin::Coins;
 use super::unwrap_ext::MyUnwrapExt;
 use super::wallet::{WalletMsg, WalletRequest, WalletPost, WalletPostRef};
-
+use shared::execute::{
+    summary::{FullSummaryRequest, FullSummaryResponse}
+};
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -25,7 +27,7 @@ impl WalletPost for ContractInstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub struct ContractExecuteMsg {
     pub addr: String,
-    pub msg: ContractExecuteMsgContent, 
+    pub msg: shared::execute::ExecuteMsg, 
     pub coins: Option<Coins>
 }
 
@@ -39,15 +41,8 @@ impl WalletPost for ContractExecuteMsg {
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(tag = "kind", content = "data")]
 #[serde(rename_all = "snake_case")]
-pub enum ContractExecuteMsgContent {
-    FullSummaryRequest(shared::summary::FullSummaryRequest)
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-#[serde(tag = "kind", content = "data")]
-#[serde(rename_all = "snake_case")]
 pub enum ContractExecuteResp {
-    FullSummaryResponse(shared::summary::FullSummaryResponse)
+    FullSummaryResponse(FullSummaryResponse)
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Eq, PartialEq)]

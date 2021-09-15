@@ -4,10 +4,10 @@ use wasm_bindgen::JsCast;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use super::coin::Coins;
-use super::prelude::{ContractExecuteMsg, ContractExecuteMsgContent};
+use super::contract::ContractExecuteMsg;
 use super::unwrap_ext::MyUnwrapExt;
 use super::wallet::{WalletPost};
-use shared::{
+use shared::execute::{
     summary::FullSummaryRequest
 };
 
@@ -19,13 +19,13 @@ pub trait ExecutePostMsg {
     fn try_post(self, addr: &str, coins: Option<Coins>) -> Result<(), JsValue>;
 }
 
-impl ExecutePostMsg for FullSummaryRequest {
+impl ExecutePostMsg for shared::execute::ExecuteMsg {
     fn try_post(self, addr: &str, coins: Option<Coins>) -> Result<(), JsValue> {
 
         ContractExecuteMsg {
             addr: addr.to_string(),
             coins,
-            msg: ContractExecuteMsgContent::FullSummaryRequest(self)
+            msg: self 
         }.try_post()
     }
 }

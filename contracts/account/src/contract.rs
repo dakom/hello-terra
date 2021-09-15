@@ -3,7 +3,11 @@ use cosmwasm_std::{
     StdResult, Uint128, QueryResponse
 };
 
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use shared::{
+    execute::ExecuteMsg, 
+    instantiate::InstantiateMsg, 
+    query::QueryMsg
+};
 use terra_cosmwasm::TerraQuerier;
 
 

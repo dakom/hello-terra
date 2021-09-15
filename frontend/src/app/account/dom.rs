@@ -4,6 +4,7 @@ use super::{state::*, styles};
 use crate::components::{button::*, image::*};
 use futures_signals::signal::SignalExt;
 use crate::utils::prelude::*;
+use shared::execute::{ExecuteMsg, summary::FullSummaryRequest};
 
 impl Account {
     pub fn render(state: Rc<Self>) -> Dom {
@@ -26,8 +27,8 @@ impl Account {
     }
     fn render_loading(state: Rc<Self>) -> Dom {
 
-        shared::summary::FullSummaryRequest {}
-            .post(&state.wallet_info.addr, None);
+        ExecuteMsg::FullSummary(FullSummaryRequest {})
+            .post(&state.contract_info.addr, None);
 
         html!("h1", {
             .text("Loading...")
