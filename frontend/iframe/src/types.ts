@@ -1,11 +1,4 @@
-import { Wallet, WalletStatus } from '@terra-money/wallet-provider';
-import { LCDClient} from '@terra-money/terra.js';
-
-export interface WalletState {
-    lcd: LCDClient, 
-    wallet:Wallet, 
-    addr: string
-}
+import { WalletStatus } from '@terra-money/wallet-provider';
 
 //Top-level messages
 export type IframeMsg = 
@@ -47,9 +40,17 @@ export type WalletResponseMsg = {
   kind: IframeMessageKind.WalletResponse, 
   data: WalletResponse
 };
-export enum WalletSetup {
+export type WalletSetup = 
+  { kind: WalletSetupKind.ConnectExtension }
+  | { kind: WalletSetupKind.ConnectMobile }  
+  | { kind: WalletSetupKind.ConnectManual, data: [string, string, string]}
+  | { kind: WalletSetupKind.Install }  
+  | { kind: WalletSetupKind.Disconnect };
+
+export enum WalletSetupKind {
   ConnectExtension = "connect_extension",
   ConnectMobile = "connect_mobile",
+  ConnectManual = "connect_manually",
   Install = "install",
   Disconnect = "disconnect",
 }

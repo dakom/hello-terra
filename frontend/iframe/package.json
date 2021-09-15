@@ -22,6 +22,12 @@
       "!**/__*__/**"
     ]
   },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
   "browserslist": {
     "production": [
       "chrome > 60",

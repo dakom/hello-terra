@@ -1,6 +1,7 @@
 use cfg_if::cfg_if;
 use once_cell::sync::Lazy;
 use crate::utils::env::env_var;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 cfg_if! {
     if #[cfg(all(feature = "local"))] {
@@ -12,14 +13,28 @@ cfg_if! {
 
 #[derive(Default)]
 pub struct Debug {
-    pub wallet_mnemonic: Option<String>,
+    _auto_login_manually: bool,
+    has_auto_loggedin_once: AtomicBool
 }
 
 impl Debug {
     pub fn local() -> Self {
         Self {
-            //wallet_mnemonic: env_var("DEBUG_WALLET_MNEMONIC").ok(),
-            wallet_mnemonic: None,
+            _auto_login_manually: true,
+            has_auto_loggedin_once: AtomicBool::new(false)
+        }
+    }
+
+    pub fn auto_login_manually(&self) -> bool {
+        if self._auto_login_manually {
+            if !self.has_auto_loggedin_once.load(Ordering::SeqCst) {
+                self.has_auto_loggedin_once.store(true, Ordering::SeqCst);
+                true
+            } else {
+                false
+            }
+        } else {
+            false
         }
     }
 }

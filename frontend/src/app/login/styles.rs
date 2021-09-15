@@ -20,6 +20,13 @@ pub const MNEMONIC:Lazy<String> = Lazy::new(|| {
     }
 });
 
+pub const MNEMONIC_FIELDS:Lazy<String> = Lazy::new(|| {
+    class! {
+        .style("display", "flex")
+        .style("flex-direction", "column")
+        .style("gap", "3rem")
+    }
+});
 
 pub const CHOICES:Lazy<String> = Lazy::new(|| {
     class! {

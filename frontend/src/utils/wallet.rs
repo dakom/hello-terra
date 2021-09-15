@@ -77,11 +77,13 @@ pub enum WalletStatus {
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "snake_case")]
+#[serde(tag = "kind", content = "data")]
 pub enum WalletSetup{
     ConnectExtension,
     ConnectMobile,
     Install,
-    Disconnect
+    Disconnect,
+    ConnectManually(String, String, String)
 }
 
 #[derive(Deserialize, Serialize, Debug)]

@@ -6,7 +6,7 @@
 # GOALS
 
 ## User Experience
-* Login via Terra Station chrome extension or mobile app
+* Login via Terra Station chrome extension, mobile app or manual entry
 * No other auth or database (state is persisted on-chain, contract addresses are stored locally in-browser)
 * Reactive to live changes on the network (correct balance shown in multiple tabs)
 * Simple bootstrapping for new system (no need for user to manually compile/select .wasm files) 
@@ -14,6 +14,7 @@
 
 # Technical
 
+* Wallet providers are abstracted away (e.g. manual mode is internal, not via the official provider)
 * No need or use for JSON schema (real cargo docs - see above)
 * Native Rust types for message payloads enfoced _at compile-time_ (contracts and frontend are guaranteed to typecheck with eachother) 
 * Frontend main application is pure Rust/WebAssembly, written in the Dominator framework (declarative, fast, and awesome)
@@ -22,15 +23,22 @@
 * Continuous Integration/Deployment of full app via Github Actions (live demo - see above)
 * Good DX (live-reloads when sources change, cross-platform, simple commands, separate local vs. release settings, workspace, etc.)
 
-## Iframe / Wallet abstraction
+# Example code for executing a contract
+
+(TODO - document)
+
+
+# Iframe / Wallet abstraction / Setup
+
+This part requires a bit more heavy lifting
 
 `wallet-provider` depends on React, and `terra.js` doesn't bundle nicely with rollup/wasm
 
-So instead of wrangling this into the core application, it's separated out into its own iframe. The only time the UI needs to be displayed is for QR code.
+So instead of wrangling this into the core application, it's separated out into its own iframe and message-passing mechanism. The only time the UI needs to be displayed is for QR code.
 
-Having this abstraction is also theoretically nice since it can allow adding new wallet providers or even dealing with different chains across a generic API
+Having this abstraction does have a benefit, since it allows for new wallet providers or even dealing with different chains across a generic API
 
-This does have one downside - the typescript and Rust types for the high-level communication wrappers need to be kept in sync. However, This is only needed for these wrappers, not each message use-case. For example, adding new contract message request/response payloads doesn't require any further work (it's all kept in Rust and the wallet is oblivious to the on-the-wire json format). Adding more Terra.JS functionality like Bank Queries and whatnot would only need to be done once.
+This does have one downside - the typescript and Rust types for the high-level communication wrappers need to be kept in sync and only a few API calls are supported at the moment. However, This is only needed for these wrappers, not each message use-case. For example, adding new contract message request/response payloads doesn't require any further work (it's all kept in Rust and the wallet is oblivious to the on-the-wire json format). Adding more Terra.JS functionality like Bank Queries and whatnot would only need to be done once.
 
 # Local Development
 

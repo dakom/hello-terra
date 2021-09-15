@@ -66,6 +66,9 @@ function getPlugins() {
         injectProcessEnv({
             REMOTE_TARGET: process.env.REMOTE_TARGET,
             MEDIA_DEV_PORT: process.env.MEDIA_DEV_PORT,
+            WALLET_MNEMONIC_KEY: process.env.WALLET_MNEMONIC_KEY,
+            WALLET_MNEMONIC_HOST: process.env.WALLET_MNEMONIC_HOST,
+            WALLET_MNEMONIC_CHAIN: process.env.WALLET_MNEMONIC_CHAIN,
         }),
     ];
 
