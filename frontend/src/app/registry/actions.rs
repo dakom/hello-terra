@@ -21,24 +21,19 @@ impl Registry {
         Ok(text.trim().to_string())
     }
 
-    pub fn get_contract_id(hash:&str, chain_id:&str) -> Option<String> {
-        let key = format!("{}-{}", chain_id, hash);
+
+    pub fn get_contract_id(key: &ContractIdLookupKey) -> Option<u64> {
+        let key = String::from(key);
 
         let res = get_local_storage::<ContractIdLookup>(CONTRACT_ACCOUNT_ID_STORAGE)
             .and_then(|lookup| {
-                lookup.get(&key).map(|x| x.to_string())
+                lookup.get(&key).map(|x| *x)
             });
-
-        if res.is_none() {
-            //Whatever is in storages is outdated, wipe it all
-            delete_local_storage(CONTRACT_ACCOUNT_ID_STORAGE);
-            delete_local_storage(CONTRACT_ACCOUNT_ADDR_STORAGE);
-        }
 
         res
     }
-    pub fn set_contract_id(hash:&str, chain_id:&str, id:String) {
-        let key = format!("{}-{}", chain_id, hash);
+    pub fn set_contract_id(key: ContractIdLookupKey, id:u64) {
+        let key = String::from(key);
 
         let mut lookup = get_local_storage::<ContractIdLookup>(CONTRACT_ACCOUNT_ID_STORAGE)
             .unwrap_or_default();
@@ -48,16 +43,16 @@ impl Registry {
         set_local_storage(CONTRACT_ACCOUNT_ID_STORAGE, lookup);
 
     }
-    pub fn get_contract_addr(wallet_addr:&str, chain_id:&str) -> Option<String> {
-        let key = format!("{}-{}", chain_id, wallet_addr);
+    pub fn get_contract_addr(key: &ContractAddrLookupKey) -> Option<String> {
+        let key = String::from(key);
 
         get_local_storage::<ContractAddrLookup>(CONTRACT_ACCOUNT_ADDR_STORAGE)
             .and_then(|lookup| {
-                lookup.get(wallet_addr).map(|x| x.to_string())
+                lookup.get(&key).map(|x| x.to_string())
             })
     }
-    pub fn set_contract_addr(wallet_addr:&str, chain_id:&str, contract_addr:String) {
-        let key = format!("{}-{}", chain_id, wallet_addr);
+    pub fn set_contract_addr(key:ContractAddrLookupKey, contract_addr:String) {
+        let key = String::from(key);
 
         let mut lookup = get_local_storage::<ContractAddrLookup>(CONTRACT_ACCOUNT_ADDR_STORAGE)
             .unwrap_or_default();
@@ -111,13 +106,45 @@ impl Registry {
         }));
     }
 
+    pub fn instantiate_contract(state: Rc<Self>, contract_id: u64) {
+        state.loader.load(clone!(state => async move {
+
+            let (sender, receiver) = oneshot::channel::<Option<String>>();
+            *state.contract_addr_sender.borrow_mut() = Some(sender);
+
+            ContractInstantiateMsg { id: contract_id }
+                .post();
+
+            if let Some(addr) = receiver.await.ok().and_then(|result| result) {
+                let key = ContractAddrLookupKey {
+                    chain_id: state.wallet_info.chain_id.clone(),
+                    wallet_addr: state.wallet_info.addr.clone(),
+                    contract_id: contract_id.clone()
+                };
+                Self::set_contract_addr(key, addr.clone());
+                state.app.contract_info.set_neq(Some(ContractInfo {
+                    id: contract_id,
+                    addr,
+                    chain_id: state.wallet_info.chain_id.clone(),
+                }));
+            } else {
+                web_sys::window().unwrap_ext().alert_with_message("unable to instantiate contract!");
+            }
+        }));
+    }
+
     pub fn handle_wallet_message(state: Rc<Self>, msg: WalletMsg) {
         match msg {
             WalletMsg::Response(resp) => {
                 match resp {
                     WalletResponse::ContractUpload(id) => {
-                        if let Some(sender) = state.msg_sender.borrow_mut().take() {
+                        if let Some(sender) = state.contract_id_sender.borrow_mut().take() {
                             sender.send(id);
+                        }
+                    },
+                    WalletResponse::ContractInstantiate(addr) => {
+                        if let Some(sender) = state.contract_addr_sender.borrow_mut().take() {
+                            sender.send(addr);
                         }
                     },
                     _ => {}
@@ -151,13 +178,17 @@ impl Registry {
     }
 
     async fn upload_contract(state: Rc<Self>, bytes:String) {
-        let (sender, receiver) = oneshot::channel::<Option<String>>();
-        *state.msg_sender.borrow_mut() = Some(sender);
+        let (sender, receiver) = oneshot::channel::<Option<u64>>();
+        *state.contract_id_sender.borrow_mut() = Some(sender);
         WalletMsg::Request(WalletRequest::ContractUpload(bytes)).post();
 
         if let Some(id) = receiver.await.ok().and_then(|result| result) {
-            log::warn!("TODO - set contract Hash->ID in LocalStorage");
-            state.contract_id.set(Some(id));
+            let key = ContractIdLookupKey {
+                chain_id: state.wallet_info.chain_id.clone(),
+                contract_hash: state.contract_hash.get_cloned().expect_ext("contract hash must have existed before adding!")
+            };
+            Self::set_contract_id(key, id);
+            state.contract_id.set_neq(Some(id));
         } else {
             web_sys::window().unwrap_ext().alert_with_message("unable to upload contract!");
         }

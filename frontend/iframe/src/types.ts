@@ -61,11 +61,15 @@ export enum WalletWindowEvent {
 /// Wallet Requests
 export type WalletRequest = 
   WalletRequestAddr
-  | WalletRequestContractUpload;
+  | WalletRequestContractUpload
+  | WalletRequestContractInstantiate
+  | WalletRequestContractExecute;
 
 export enum WalletRequestKind {
   Addr = "addr",
   ContractUpload = "contract_upload",
+  ContractInstantiate = "contract_instantiate",
+  ContractExecute = "contract_execute",
 }
 
 export type WalletRequestAddr = {
@@ -77,14 +81,35 @@ export type WalletRequestContractUpload = {
   kind: WalletRequestKind.ContractUpload,
   data: string 
 }
+
+export type WalletRequestContractInstantiate = {
+  kind: WalletRequestKind.ContractInstantiate,
+  data: {
+    id: number
+  } 
+}
+
+
+export type WalletRequestContractExecute = {
+  kind: WalletRequestKind.ContractExecute,
+  data: {
+    addr: string,
+    //coins:? Coins, 
+    msg: any 
+  } 
+}
 /// Wallet Responses 
 export type WalletResponse = 
   WalletResponseAddr
-  | WalletResponseContractUpload;
+  | WalletResponseContractUpload
+  | WalletResponseContractInstantiate
+  | WalletResponseContractExecute;
 
 export enum WalletResponseKind {
   Addr = "addr",
-  ContractUpload = "contract_upload"
+  ContractUpload = "contract_upload",
+  ContractInstantiate = "contract_instantiate",
+  ContractExecute = "contract_execute",
 }
 
 export type WalletResponseAddr = {
@@ -94,5 +119,14 @@ export type WalletResponseAddr = {
 
 export type WalletResponseContractUpload = {
   kind: WalletResponseKind.ContractUpload,
+  data?: number 
+}
+
+export type WalletResponseContractInstantiate = {
+  kind: WalletResponseKind.ContractInstantiate,
+  data?: string
+}
+export type WalletResponseContractExecute = {
+  kind: WalletResponseKind.ContractExecute,
   data?: string
 }

@@ -12,20 +12,31 @@ impl Registry {
             .future(clone!(state => async move {
                 match Self::load_contract_hash().await {
                     Ok(hash) => {
-                        let contract_id = Self::get_contract_id(&hash, &state.wallet_info.chain_id);
+                        //Got the hash - first try to see if we have the id and/or full info lookup
+                        //if we do have any of these, the UI will reflect that
+                        //including if we have the full info - it'll move onto the account page
+                        let contract_id = Self::get_contract_id(&ContractIdLookupKey {
+                            contract_hash: hash.clone(), 
+                            chain_id: state.wallet_info.chain_id.clone()
+                        });
                         if let Some(contract_id) = contract_id.as_ref() {
-                            let contract_info = Self::get_contract_addr(&state.wallet_info.addr, &state.wallet_info.chain_id)
-                                .map(|contract_addr| {
-                                    ContractInfo {
-                                        id: contract_id.clone(),
-                                        addr: contract_addr,
-                                        chain_id: state.wallet_info.addr.clone()
-                                    }
-                                });
-                            state.app.contract_info.set(contract_info);
+                            let contract_info = Self::get_contract_addr(&ContractAddrLookupKey {
+                                chain_id: state.wallet_info.chain_id.clone(),
+                                contract_id: contract_id.clone(),
+                                wallet_addr: state.wallet_info.addr.clone()
+                            })
+                            .map(|contract_addr| {
+                                ContractInfo {
+                                    id: contract_id.clone(),
+                                    addr: contract_addr,
+                                    chain_id: state.wallet_info.addr.clone()
+                                }
+                            });
+
+                            state.app.contract_info.set_neq(contract_info);
                         }
-                        state.contract_id.set(contract_id);
-                        state.contract_hash.set(Some(hash));
+                        state.contract_id.set_neq(contract_id);
+                        state.contract_hash.set_neq(Some(hash));
                     },
                     Err(err) => {
                         log::warn!("got error: {:?}", err);
@@ -59,18 +70,20 @@ impl Registry {
                 html!("h1", {
                     .text_signal(state.contract_id.signal_ref(clone!(state => move |contract_id| {
                         match contract_id {
-                            _ => format!("Welcome to {}!", state.wallet_info.network_name)
+                            _ => "Welcome!"
                         }
                     })))
-                }),
-                html!("i", {
-                    .text(&format!("wallet address: {}", state.wallet_info.addr))
                 }),
             ])
             .child_signal(state.contract_id.signal_ref(clone!(state => move |contract_id| Some({
                 match contract_id {
                     None => {
                         html!("div", {
+                            .child(html!("i", {
+                                .style("display", "block")
+                                .style("text-align", "center")
+                                .text(&format!("No system found. Bootstrap a fresh one!"))
+                            }))
                             .child(html!("div", {
                                 .class(&*styles::CHOICES)
                                 .child(html!("div", {
@@ -121,11 +134,6 @@ impl Registry {
                                     }))
                                 }))
                             }))
-                            .child(html!("i", {
-                                .style("display", "block")
-                                .style("text-align", "center")
-                                .text(&format!("No system found. Bootstrap a fresh one!"))
-                            }))
                         })
                     },
                     Some(contract_id) => {
@@ -133,14 +141,11 @@ impl Registry {
                             .class(&*styles::CHOICES)
                             .child(html!("div", {
                                 .class(&*styles::CHOICE)
-                                .child(html!("i", {
-                                    .class(&*styles::CHOICE_LABEL)
-                                    .text(&format!("System id: {}", contract_id))
-                                }))
                                 .child(Button::new_color(ButtonColor::Blue, "Register new account")
-                                    .render_mixin(clone!(state => move |dom| {
+                                    .render_mixin(clone!(state, contract_id => move |dom| {
                                         dom
-                                            .event(clone!(state => move |evt:events::Click| {
+                                            .event(clone!(state, contract_id => move |evt:events::Click| {
+                                                Self::instantiate_contract(state.clone(), contract_id.clone());
                                             }))
                                     }))
                                 )
@@ -149,6 +154,57 @@ impl Registry {
                     }
                 }
             }))))
+            .child(
+                html!("table", {
+                    .class(&*styles::META_INFO)
+                    .children(&mut [
+                        html!("tr", {
+                            .children(&mut [
+                                html!("td", {
+                                    .text("network:")
+                                }),
+                                html!("td", {
+                                    .text(&format!("{}", state.wallet_info.network_name))
+                                })
+                            ])
+                        }),
+                        html!("tr", {
+                            .children(&mut [
+                                html!("td", {
+                                    .text("wallet address:")
+                                }),
+                                html!("td", {
+                                    .text(&format!("{}", state.wallet_info.addr))
+                                })
+                            ])
+                        }),
+                        html!("tr", {
+                            .children(&mut [
+                                html!("td", {
+                                    .text("system hash:")
+                                }),
+                                html!("td", {
+                                    .text(&contract_hash)
+                                })
+                            ])
+                        })
+                    ])
+                    .child_signal(state.contract_id.signal_ref(|contract_id| {
+                        contract_id.as_ref().map(|contract_id| {
+                            html!("tr", {
+                                .children(&mut [
+                                    html!("td", {
+                                        .text("system id:")
+                                    }),
+                                    html!("td", {
+                                        .text(&format!("{}", contract_id))
+                                    })
+                                ])
+                            })
+                        })
+                    }))
+                })
+            )
             .global_event(clone!(state => move |evt:dominator_helpers::events::Message| {
                 if let Ok(msg) = evt.try_serde_data::<WalletMsg>() {
                     Self::handle_wallet_message(state.clone(), msg);

@@ -7,9 +7,8 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlIFrameElement;
 use std::cell::RefCell;
-
-use super::{iframe::*, unwrap_ext::*};
-
+use super::contract::{ContractInstantiateMsg, ContractExecuteMsg, ContractExecuteResp};
+use super::{iframe::*, unwrap_ext::*, coin::*};
 thread_local! {
     pub static WALLET_IFRAME:RefCell<Option<HtmlIFrameElement>> = RefCell::new(None);
 }
@@ -37,12 +36,24 @@ pub enum WalletMsg {
     Response(WalletResponse),
 }
 
-impl WalletMsg {
-    pub fn post(&self) {
+pub trait WalletPost {
+    fn post(self) where Self: Sized {
         self.try_post().unwrap_ext();
     }
 
-    pub fn try_post(&self) -> Result<(), JsValue> {
+    fn try_post(self) -> Result<(), JsValue>;
+}
+
+pub trait WalletPostRef {
+    fn post(&self) {
+        self.try_post().unwrap_ext();
+    }
+
+    fn try_post(&self) -> Result<(), JsValue>;
+}
+
+impl WalletPostRef for WalletMsg {
+    fn try_post(&self) -> Result<(), JsValue> {
         WALLET_IFRAME.with(|iframe| {
             match iframe.borrow().as_ref() {
                 None => Err(JsValue::from_str("Iframe doesn't exist yet!")),
@@ -79,15 +90,21 @@ pub enum WalletSetup{
 pub enum WalletRequest {
     Addr,
     ContractUpload(String),
+    ContractInstantiate(ContractInstantiateMsg),
+    ContractExecute(ContractExecuteMsg),
 }
+
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "kind", content = "data")]
 pub enum WalletResponse {
     Addr(Option<WalletInfo>),
-    ContractUpload(Option<String>),
+    ContractUpload(Option<u64>),
+    ContractInstantiate(Option<String>),
+    ContractExecute(Option<ContractExecuteResp>),
 }
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub struct WalletInfo {

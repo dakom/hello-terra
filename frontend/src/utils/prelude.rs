@@ -5,4 +5,6 @@ pub use super::{
     iframe::*,
     wallet::*,
     contract::*,
+    coin::*,
+    messages::*,
 };

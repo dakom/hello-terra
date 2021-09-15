@@ -1,7 +1,7 @@
 import { NetworkInfo, WalletProvider, useWallet, ConnectType} from '@terra-money/wallet-provider';
-import { LCDClient} from '@terra-money/terra.js';
+import { LCDClient, MsgStoreCode, MsgInstantiateContract, MsgExecuteContract} from '@terra-money/terra.js';
 import React, {useEffect} from 'react';
-import {contractUpload} from "./utils/contract";
+import {contractUpload, contractInstantiate, contractExecute} from "./utils/contract";
 import {postWalletReponse, postWalletStatus, postWalletWindowEvent} from "./utils/postMessage";
 import {mainnet, walletConnectChainIds} from "./config";
 import {
@@ -12,6 +12,8 @@ import {
   WalletResponseKind,
   WalletSetup,
   WalletWindowEvent,
+  WalletRequestContractInstantiate,
+  WalletRequestContractExecute,
 } from "./types";
 
 
@@ -36,8 +38,6 @@ function WalletManager() {
       install,
       disconnect,
     } = wallet;
-
-    console.log(network);
 
     useEffect(() => {
 
@@ -98,8 +98,7 @@ function WalletManager() {
           break;
 
           case IframeMessageKind.WalletRequest: {
-            const {data, kind} = msg.data;
-            switch(kind) {
+            switch(msg.data.kind) {
               case WalletRequestKind.Addr: {
                 withWallet(({wallet, addr}) => {
                   postWalletReponse({kind: WalletResponseKind.Addr, data: {addr, network_name: wallet.network.name, chain_id: wallet.network.chainID}});
@@ -109,8 +108,9 @@ function WalletManager() {
 
               case WalletRequestKind.ContractUpload: {
                 withWallet((walletState) => {
-                    contractUpload(walletState, data)
-                        .then((codeId:string) => {
+                    const outMsg = new MsgStoreCode(walletState.addr, msg.data.data);
+                    contractUpload(walletState, outMsg)
+                        .then((codeId:number) => {
                                 postWalletReponse({kind: WalletResponseKind.ContractUpload, data: codeId});
                         })
                         .catch((error: unknown) => {
@@ -121,8 +121,59 @@ function WalletManager() {
                 });
               }
               break;
+              case WalletRequestKind.ContractInstantiate: {
+                const {data: {id}}:WalletRequestContractInstantiate = msg.data;
 
-              default: break;
+                withWallet((walletState) => {
+                  //TODO - add coin params...
+                  const outMsg = new MsgInstantiateContract(
+                    walletState.addr,
+                    "",
+                    id,
+                    {},
+                    {}
+                  ); 
+
+                  contractInstantiate(walletState, outMsg)
+                        .then((addr:string) => {
+                                postWalletReponse({kind: WalletResponseKind.ContractInstantiate, data: addr});
+                        })
+                        .catch((error: unknown) => {
+                            console.error("GOT ERROR:");
+                            console.error(error);
+                            postWalletReponse({kind: WalletResponseKind.ContractInstantiate});
+                        });
+                });
+              }
+              break;
+
+              case WalletRequestKind.ContractExecute: {
+                withWallet((walletState) => {
+                  //TODO - add coin params...
+                  const outMsg = new MsgExecuteContract(
+                    walletState.addr,
+                    msg.data.data.addr,
+                    msg.data.data.msg
+                  );
+
+                  contractExecute(walletState, outMsg)
+                        .then((resp:any) => {
+                                postWalletReponse({kind: WalletResponseKind.ContractExecute, data: resp});
+                        })
+                        .catch((error: unknown) => {
+                            console.error("GOT ERROR:");
+                            console.error(error);
+                            postWalletReponse({kind: WalletResponseKind.ContractExecute});
+                        });
+                });
+
+              }
+              break;
+
+              default: {
+                console.log("unhandled request:");
+                console.log(msg);
+              }break;
             }
           }
           break;

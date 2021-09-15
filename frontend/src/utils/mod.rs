@@ -8,3 +8,5 @@ pub mod iframe;
 pub mod wallet;
 pub mod contract;
 pub mod storage;
+pub mod coin;
+pub mod messages;

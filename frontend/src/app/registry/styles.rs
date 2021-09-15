@@ -36,3 +36,10 @@ pub const CHOICE_LABEL:Lazy<String> = Lazy::new(|| {
         .style("margin-bottom", "10rem")
     }
 });
+pub const META_INFO:Lazy<String> = Lazy::new(|| {
+    class! {
+        .style("position", "fixed")
+        .style("bottom", "0")
+        .style("left", "0")
+    }
+});

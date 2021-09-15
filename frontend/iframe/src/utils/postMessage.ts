@@ -16,6 +16,5 @@ export function postWalletReponse(resp: WalletResponse) {
 }
 
 function postIframeMsg(msg: IframeMsg) {
-  console.log(msg);
   window.parent.postMessage(msg, "*");
 }

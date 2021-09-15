@@ -28,7 +28,7 @@
 
 So instead of wrangling this into the core application, it's separated out into its own iframe. The only time the UI needs to be displayed is for QR code.
 
-Having this abstraction is also theoretically nice since it can allow adding new wallet providers or dealing with different chains across a generic API
+Having this abstraction is also theoretically nice since it can allow adding new wallet providers or even dealing with different chains across a generic API
 
 This does have one downside - the typescript and Rust types for the high-level communication wrappers need to be kept in sync. However, This is only needed for these wrappers, not each message use-case. For example, adding new contract message request/response payloads doesn't require any further work (it's all kept in Rust and the wallet is oblivious to the on-the-wire json format). Adding more Terra.JS functionality like Bank Queries and whatnot would only need to be done once.
 

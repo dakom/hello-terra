@@ -27,7 +27,6 @@ pub fn get_local_storage<A: DeserializeOwned>(storage_name:&str) -> Option<A> {
 
 pub fn set_local_storage<A: Serialize>(storage_name:&str, value:A) {
     let value = serde_json::to_string(&value).unwrap_ext();
-
     with_local_storage(|storage| storage.set(storage_name, &value).unwrap_ext());
 }
 
