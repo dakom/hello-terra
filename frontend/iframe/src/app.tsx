@@ -2,16 +2,19 @@ import { WalletProvider, useWallet, ConnectType, WalletStatus, Wallet as AutoWal
 import { MsgStoreCode, MsgInstantiateContract, MsgExecuteContract, MnemonicKey, Wallet as ManualWallet, LCDClient} from '@terra-money/terra.js';
 import React, {useEffect, useState} from 'react';
 import {contractUpload, contractInstantiate, contractExecute} from "./utils/contract";
-import {postWalletReponse, postWalletStatus, postWalletWindowEvent} from "./utils/postMessage";
+import {postWalletBridgeResponse, postWalletBridgeStatus, postWalletBridgeWindowEvent} from "./utils/postMessage";
 import {mainnet, walletConnectChainIds} from "./config";
 import {
   IframeMsg,
   IframeMessageKind,
-  WalletRequestKind,
-  WalletResponseKind,
-  WalletSetupKind,
-  WalletWindowEvent,
-  WalletRequestContractInstantiate,
+  WalletBridgeRequestKind,
+  WalletBridgeResponseKind,
+  WalletBridgeSetupKind,
+  WalletBridgeWindowEvent,
+  WalletBridgeRequestContractInstantiate,
+  WalletBridgeRequestContractUpload,
+  WalletBridgeRequestContractExecute,
+  WalletBridgeRequestSetup,
 } from "./types";
 
 import {
@@ -63,85 +66,96 @@ function WalletManager() {
         if(wallet != null) {
            return f(wallet);
         } else {
-          //Will always effectively logout (i.e. response to "get id" without an id
-          postWalletReponse({kind: WalletResponseKind.Addr});
+          postWalletBridgeStatus(WalletStatus.WALLET_NOT_CONNECTED);
         }
-
       }
 
       const onMessage = (evt:any) => {
-        const msg:IframeMsg = evt.data;
+        console.log("TO IFRAME:", evt.data);
+
+        if(!Array.isArray(evt.data) || evt.data.length < 2) {
+          return;
+        }
+
+        const [bridge_id, msg]:IframeMsg = evt.data;
 
         switch(msg.kind) {
-          case IframeMessageKind.WalletSetup:
-              try {
-                switch(msg.data.kind) {
-                    case WalletSetupKind.ConnectExtension:
-                        autoWallet.connect(ConnectType.CHROME_EXTENSION); 
-                        break;
 
-                    case WalletSetupKind.ConnectMobile:
-                        autoWallet.connect(ConnectType.WALLETCONNECT); 
-                        break;
-
-                    case WalletSetupKind.Install:
-                        autoWallet.install(ConnectType.CHROME_EXTENSION); 
-                        break;
-
-                    case WalletSetupKind.Disconnect:
-                        autoWallet.disconnect();
-                        setManualWallet(undefined);
-                        break;
-
-                    case WalletSetupKind.ConnectManual:
-                        const [key, host, chainId] = msg.data.data;
-
-                        const mk = new MnemonicKey({ mnemonic: key});
-                        
-                        const lcd = new LCDClient({
-                          URL: host,
-                          chainID: chainId 
-                        });
-
-                        setManualWallet(new ManualWallet(lcd, mk));
-                        break;
-
-                    default: 
-                        console.log("other setup message:");
-                        console.log(msg);
-                      break;
-                }
-            } catch(e) {
-                alert("not supported (do you have the extension installed?)");
-                console.error(e);
-            }
-            break;
-
-          case IframeMessageKind.WalletRequest:
+          case IframeMessageKind.WalletBridgeRequest:
             switch(msg.data.kind) {
-              case WalletRequestKind.Addr:
+
+              case WalletBridgeRequestKind.Setup:
+                  try {
+                    const setup_data = (msg.data as WalletBridgeRequestSetup).data;
+
+                    switch(setup_data.kind) {
+                        case WalletBridgeSetupKind.ConnectExtension:
+                            autoWallet.connect(ConnectType.CHROME_EXTENSION); 
+                            break;
+
+                        case WalletBridgeSetupKind.ConnectMobile:
+                            autoWallet.connect(ConnectType.WALLETCONNECT); 
+                            break;
+
+                        case WalletBridgeSetupKind.Install:
+                            autoWallet.install(ConnectType.CHROME_EXTENSION); 
+                            break;
+
+                        case WalletBridgeSetupKind.Disconnect:
+                            setManualWallet(undefined);
+                            autoWallet.disconnect();
+                            break;
+
+                        case WalletBridgeSetupKind.ConnectManual:
+                            const [key, host, chainId] = setup_data.data; 
+
+                            const mk = new MnemonicKey({ mnemonic: key});
+                            
+                            const lcd = new LCDClient({
+                              URL: host,
+                              chainID: chainId 
+                            });
+
+                            setManualWallet(new ManualWallet(lcd, mk));
+                            break;
+
+                        default: 
+                            console.log("other setup message:");
+                            console.log(msg);
+                          break;
+                    }
+                } catch(e) {
+                    alert("not supported (do you have the extension installed?)");
+                    console.error(e);
+                }
+                break;
+
+              case WalletBridgeRequestKind.WalletInfo:
                 withWallet((wallet) => {
-                  postWalletReponse({kind: WalletResponseKind.Addr, data: {addr: wallet.addr, network_name: wallet.lcd.config.URL, chain_id: wallet.lcd.config.chainID}});
+                  postWalletBridgeResponse(bridge_id, {kind: WalletBridgeResponseKind.WalletInfo, data: {addr: wallet.addr, network_name: wallet.lcd.config.URL, chain_id: wallet.lcd.config.chainID}});
                 });
                 break;
 
-              case WalletRequestKind.ContractUpload:
+              case WalletBridgeRequestKind.ContractUpload:
                 withWallet((wallet) => {
-                    const outMsg = new MsgStoreCode(wallet.addr, msg.data.data);
+                    console.log(wallet.addr);
+                    const outMsg = new MsgStoreCode(wallet.addr, (msg.data as WalletBridgeRequestContractUpload).data);
+                    console.log(outMsg);
+
                     contractUpload(wallet, outMsg)
                         .then((codeId:number) => {
-                                postWalletReponse({kind: WalletResponseKind.ContractUpload, data: codeId});
+                                postWalletBridgeResponse(bridge_id, {kind: WalletBridgeResponseKind.ContractUpload, data: codeId});
                         })
                         .catch((error: unknown) => {
                             console.error("GOT ERROR:");
                             console.error(error);
-                            postWalletReponse({kind: WalletResponseKind.ContractUpload});
+                            postWalletBridgeResponse(bridge_id, {kind: WalletBridgeResponseKind.ContractUpload});
                         });
                 });
                 break;
 
-              case WalletRequestKind.ContractInstantiate:
-                const {data: {id}}:WalletRequestContractInstantiate = msg.data;
+              case WalletBridgeRequestKind.ContractInstantiate:
+                const {data: {id}}:WalletBridgeRequestContractInstantiate = msg.data;
 
                 withWallet((wallet) => {
                   //TODO - add coin params...
@@ -155,33 +169,33 @@ function WalletManager() {
 
                   contractInstantiate(wallet, outMsg)
                         .then((addr:string) => {
-                                postWalletReponse({kind: WalletResponseKind.ContractInstantiate, data: addr});
+                                postWalletBridgeResponse(bridge_id, {kind: WalletBridgeResponseKind.ContractInstantiate, data: addr});
                         })
                         .catch((error: unknown) => {
                             console.error("GOT ERROR:");
                             console.error(error);
-                            postWalletReponse({kind: WalletResponseKind.ContractInstantiate});
+                            postWalletBridgeResponse(bridge_id, {kind: WalletBridgeResponseKind.ContractInstantiate});
                         });
                 });
                 break;
 
-              case WalletRequestKind.ContractExecute:
+              case WalletBridgeRequestKind.ContractExecute:
                 withWallet((wallet) => {
                   //TODO - add coin params...
                   const outMsg = new MsgExecuteContract(
                     wallet.addr,
-                    msg.data.data.addr,
-                    msg.data.data.msg
+                    (msg.data as WalletBridgeRequestContractExecute).data.addr,
+                    (msg.data as WalletBridgeRequestContractExecute).data.msg
                   );
 
                   contractExecute(wallet, outMsg)
                         .then((resp:any) => {
-                                postWalletReponse({kind: WalletResponseKind.ContractExecute, data: resp});
+                                postWalletBridgeResponse(bridge_id, {kind: WalletBridgeResponseKind.ContractExecute, data: resp});
                         })
                         .catch((error: unknown) => {
                             console.error("GOT ERROR:");
                             console.error(error);
-                            postWalletReponse({kind: WalletResponseKind.ContractExecute});
+                            postWalletBridgeResponse(bridge_id, {kind: WalletBridgeResponseKind.ContractExecute});
                         });
                 });
                 break;
@@ -193,11 +207,11 @@ function WalletManager() {
             }
           break;
 
-          case IframeMessageKind.WalletStatus:
+          case IframeMessageKind.WalletBridgeStatus:
             console.warn("weird! child received status message...");
             break;
 
-          case IframeMessageKind.WalletResponse:
+          case IframeMessageKind.WalletBridgeResponse:
             console.warn("weird! child received response message...");
             break;
 
@@ -206,7 +220,7 @@ function WalletManager() {
       };
       
       const onClick = () => {
-        postWalletWindowEvent(WalletWindowEvent.Click);
+        postWalletBridgeWindowEvent(WalletBridgeWindowEvent.Click);
       };
 
       window.addEventListener("message", onMessage);
@@ -220,7 +234,7 @@ function WalletManager() {
 
     useEffect(() => {
 
-      postWalletStatus(walletStatus);
+      postWalletBridgeStatus(walletStatus);
     }, [walletStatus]);
 
     return <React.Fragment />;

@@ -2,32 +2,33 @@ use std::rc::Rc;
 use dominator::{html, Dom, clone, with_node};
 use super::{state::*, styles};
 use crate::components::{button::*, image::*, overlay::*};
-use crate::utils::prelude::*;
+use crate::utils::{prelude::*, contract::*};
 use wasm_bindgen::prelude::*;
 use futures_signals::signal::SignalExt;
-
+use crate::config::DEBUG;
+use crate::utils::contract;
 impl Registry {
     pub fn render(state: Rc<Self>) -> Dom {
         html!("div", {
             .future(clone!(state => async move {
-                match Self::load_contract_hash().await {
+                match contract::load_contract_hash().await {
                     Ok(hash) => {
                         //Got the hash - first try to see if we have the id and/or full info lookup
                         //if we do have any of these, the UI will reflect that
                         //including if we have the full info - it'll move onto the account page
-                        let contract_id = Self::get_contract_id(&ContractIdLookupKey {
-                            contract_hash: hash.clone(), 
+                        let contract_id = contract::get_contract_id(&ContractIdLookupKey {
+                            file_hash: hash.clone(), 
                             chain_id: state.wallet_info.chain_id.clone()
                         });
                         if let Some(contract_id) = contract_id.as_ref() {
-                            let contract_info = Self::get_contract_addr(&ContractAddrLookupKey {
+                            let contract_info = contract::get_contract_addr(&ContractAddrLookupKey {
                                 chain_id: state.wallet_info.chain_id.clone(),
-                                contract_id: contract_id.clone(),
-                                wallet_addr: state.wallet_info.addr.clone()
+                                code_id: contract_id.clone(),
+                                owner_addr: state.wallet_info.addr.clone()
                             })
                             .map(|contract_addr| {
                                 ContractInfo {
-                                    id: contract_id.clone(),
+                                    code_id: contract_id.clone(),
                                     addr: contract_addr,
                                     chain_id: state.wallet_info.addr.clone()
                                 }
@@ -79,6 +80,11 @@ impl Registry {
                 match contract_id {
                     None => {
                         html!("div", {
+                            .after_inserted(clone!(state => move |_| {
+                                if DEBUG.auto_bootstrap_and_register {
+                                    Self::upload_file_remote(state.clone());
+                                }
+                            }))
                             .child(html!("i", {
                                 .style("display", "block")
                                 .style("text-align", "center")
@@ -91,7 +97,7 @@ impl Registry {
                                         .render_mixin(clone!(state => move |dom| {
                                             dom
                                                 .event(clone!(state => move |evt:events::Click| {
-                                                    Self::upload_contract_remote(state.clone());
+                                                    Self::upload_file_remote(state.clone());
                                                 }))
                                         }))
                                     )
@@ -124,7 +130,7 @@ impl Registry {
                                                 let file = elem.files().and_then(|files| files.get(0));
 
                                                 if let Some(file) = file {
-                                                    Self::upload_contract_file(state.clone(), file);
+                                                    Self::upload_file_manually(state.clone(), file);
                                                 }
                                         
                                                 // Clear it to enable working again
@@ -138,6 +144,11 @@ impl Registry {
                     },
                     Some(contract_id) => {
                         html!("div", {
+                            .after_inserted(clone!(state, contract_id => move |_| {
+                                if DEBUG.auto_bootstrap_and_register {
+                                    Self::instantiate_contract(state.clone(), contract_id);
+                                }
+                            }))
                             .class(&*styles::CHOICES)
                             .child(html!("div", {
                                 .class(&*styles::CHOICE)
@@ -145,7 +156,7 @@ impl Registry {
                                     .render_mixin(clone!(state, contract_id => move |dom| {
                                         dom
                                             .event(clone!(state, contract_id => move |evt:events::Click| {
-                                                Self::instantiate_contract(state.clone(), contract_id.clone());
+                                                Self::instantiate_contract(state.clone(), contract_id);
                                             }))
                                     }))
                                 )
@@ -205,14 +216,6 @@ impl Registry {
                     }))
                 })
             )
-            .global_event(clone!(state => move |evt:dominator_helpers::events::Message| {
-                if let Ok(msg) = evt.try_serde_data::<WalletMsg>() {
-                    Self::handle_wallet_message(state.clone(), msg);
-                } else {
-                    //example: log::info!("{}", WalletMsg::Status("hello".to_string()).to_json_string());
-                    log::error!("hmmm got other iframe message...");
-                }
-            }))
             //Cancelling the terra window leaves it hanging
             .child_signal(state.loader.is_loading().map(|is_loading| {
                 if is_loading {

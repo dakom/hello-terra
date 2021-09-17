@@ -1,15 +1,17 @@
 use super::state::*;
 use std::rc::Rc;
 use dominator::clone;
-use crate::utils::prelude::*;
+use crate::utils::{prelude::*, wallet_bridge::{WalletBridgeRequest, WalletBridgeSetup}};
 
 impl Login {
+    //Login isn't typical request/response since the WalletState is determined by the provider
+    //So just send iframe events, and the status will be reacted to at the top-level app listener
     pub fn do_login_extension(state: Rc<Self>) {
-        WalletMsg::Setup(WalletSetup::ConnectExtension).post();
+        let _ = WalletBridgeSetup::ConnectExtension.try_post_forget();
     }
     pub fn do_login_mobile(state: Rc<Self>) {
         state.app.iframe_visible.set_neq(true);
-        WalletMsg::Setup(WalletSetup::ConnectMobile).post();
+        let _ = WalletBridgeSetup::ConnectMobile.try_post_forget();
     }
     pub fn do_login_manually(state: Rc<Self>) {
         match (
@@ -18,7 +20,7 @@ impl Login {
             state.input_chain_value.borrow().as_ref(),
         ) {
             (Some(key), Some(host), Some(chain)) => {
-                WalletMsg::Setup(WalletSetup::ConnectManually(key.to_string(), host.to_string(), chain.to_string())).post();
+                let _ = WalletBridgeSetup::ConnectManually(key.to_string(), host.to_string(), chain.to_string()).try_post_forget();
             }
             (None, _, _) => {
                 state.input_error.set(Some("Enter a key".to_string()));

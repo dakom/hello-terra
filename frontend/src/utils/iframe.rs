@@ -1,3 +1,6 @@
+/*
+    This is just generic iframe stuff. For the wallet bridge see wallet_bridge.rs
+*/
 use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -33,11 +36,5 @@ pub trait IframeMsgSend: Serialize {
     }
     fn to_json_string(&self) -> String {
         serde_json::to_string(&self).unwrap_ext()
-    }
-}
-
-pub trait IframeMsgRecv: DeserializeOwned {
-    fn from_js_value(msg:JsValue) -> Self {
-        serde_wasm_bindgen::from_value(msg).unwrap_ext()
     }
 }

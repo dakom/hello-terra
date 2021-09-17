@@ -55,9 +55,17 @@ This does have one downside - the typescript and Rust types for the high-level c
 4. in `frontend/iframe` also `npm install`
 
 
+# Build commands
+
+There's a variety in the Makefile.toml which can be composed in various ways.
+
+`cargo make dev` will get all the watchers and builders going for dev. All the output will be in one terminal.
+
+Here's some of the pieces it uses:
+
 ## Frontend dev
 
-- `cargo make frontend`
+- `cargo make frontend-dev`
 
 This will start the main app, the iframe app, and the media server in parallel, as well as open a browser tab for each app individually (though the iframe is typically meant to be hidden - recommended to close that tab and just work off the main tab, logs and line numbers show in the console there too)
 
@@ -73,6 +81,8 @@ However this is .gitignored for CI
 Running this with the frontend dev simultaneously will cause a "new system" flow live
 
 Currently, this project isn't setup for contract migrations
+
+`cargo make contracts-dev` sets up a watcher to run the build-release
 
 ## Contract testing 
 

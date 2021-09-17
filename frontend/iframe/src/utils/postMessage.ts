@@ -1,20 +1,25 @@
 import {WalletStatus} from "@terra-money/wallet-provider";
-import {IframeMessageKind, WalletWindowEvent, WalletResponse, IframeMsg} from "../types";
+import {IframeMessageKind, WalletBridgeWindowEvent, WalletBridgeResponse} from "../types";
 
 ///// IFRAME MESSAGE HANDLING //////
 //// IT IS ALL SETUP TO MATCH SERDE ON THE RUST SIDE /////
 
-export function postWalletStatus(status: WalletStatus) {
-  postIframeMsg({kind: IframeMessageKind.WalletStatus, data: status });
+export function postWalletBridgeStatus(status: WalletStatus) {
+  postIframeMsg(0, {kind: IframeMessageKind.WalletBridgeStatus, data: status });
 }
-export function postWalletWindowEvent(event: WalletWindowEvent) {
-  postIframeMsg({kind: IframeMessageKind.WalletWindow, data: event});
-}
-
-export function postWalletReponse(resp: WalletResponse) {
-  postIframeMsg({kind: IframeMessageKind.WalletResponse, data: resp});
+export function postWalletBridgeWindowEvent(event: WalletBridgeWindowEvent) {
+  postIframeMsg(0, {kind: IframeMessageKind.WalletBridgeWindowEvent, data: event});
 }
 
-function postIframeMsg(msg: IframeMsg) {
-  window.parent.postMessage(msg, "*");
+export function postWalletBridgeResponse(bridge_id: number | undefined, resp: WalletBridgeResponse) {
+  postIframeMsg(bridge_id, {kind: IframeMessageKind.WalletBridgeResponse, data: resp});
+}
+
+function postIframeMsg(bridge_id:number | undefined, msg: any) {
+
+  const payload = [bridge_id ? bridge_id : 0, msg];
+
+  console.log("FROM IFRAME:", payload);
+
+  window.parent.postMessage(payload, "*");
 }

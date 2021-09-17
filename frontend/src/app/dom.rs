@@ -1,10 +1,17 @@
 use dominator::{html, Dom, clone};
 use std::rc::Rc;
 use futures_signals::signal::SignalExt;
-use crate::{components::{
+use crate::{
+    components::{
         overlay::Overlay,
         header::Header,
-    }, config::REMOTE_TARGET, utils::prelude::*};
+    }, 
+    config::REMOTE_TARGET, 
+    utils::{
+        prelude::*,
+        wallet_bridge::{WALLET_IFRAME, WalletBridgeMsg}
+    }
+};
 
 use super::{
     state::*, 
@@ -20,6 +27,7 @@ impl App {
             .class(&*styles::MAIN) 
             .child(Header::render(Header::new(state.clone())))
             .child_signal(state.wallet_contract_init_signal().map(clone!(state => move |(is_initializing, wallet_info, contract_info)| {
+                log::info!("INITIALIZING: {}", is_initializing);
                 if is_initializing {
                     Some(Overlay::new().render_loader())
                 } else {
@@ -40,13 +48,16 @@ impl App {
                 .class_signal(styles::IFRAME_HIDDEN.clone(), state.iframe_visible.signal().map(|x| !x))
                 .class_signal(styles::IFRAME_VISIBLE.clone(), state.iframe_visible.signal())
             }))
+            //WalletStatus is sent from the iframe at any time - not part of a request/response
+            //WindowClick is also simpler to handle globally
+            //So App needs this top-level listener to iframe messages
+            //But it is the *only* place. Everywhere else is proper Futures
             .global_event(clone!(state => move |evt:dominator_helpers::events::Message| {
-                if let Ok(msg) = evt.try_serde_data::<WalletMsg>() {
+                //log::info!("EXAMPLE: {}", serde_json::to_string(&crate::utils::wallet_bridge::WalletBridgeMsg::Status(crate::utils::wallet_bridge::WalletBridgeStatus::Wallet_Not_Connected)).unwrap_ext());
+
+                if let Ok((bridge_id, msg)) = evt.try_serde_data::<(u64, WalletBridgeMsg)>() {
                     Self::handle_wallet_message(state.clone(), msg);
-                } else {
-                    //example: log::info!("{}", WalletMsg::Status("hello".to_string()).to_json_string());
-                    log::error!("hmmm got other iframe message...");
-                }
+                } 
             }))
         })
     }

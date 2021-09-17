@@ -3,8 +3,8 @@ pub use super::{
     mixin::*,
     events,
     iframe::*,
-    wallet::*,
-    contract::*,
     coin::*,
     messages::*,
+    contract::ContractInfo,
+    wallet_bridge::{WalletInfo, WalletBridgeExt, WalletBridgeRequestExt}
 };

@@ -1,25 +1,44 @@
 use std::rc::Rc;
 use super::state::App;
-use crate::utils::prelude::*;
+use crate::utils::{prelude::*, wallet_bridge::{WalletBridgeMsg, WalletBridgeSetup, WalletBridgeStatus, WalletBridgeResponse, WalletBridgeRequest, WalletBridgeWindowEvent}};
+use dominator::clone;
+use wasm_bindgen_futures::spawn_local;
 
 impl App {
     pub fn logout(&self) {
-        WalletMsg::Setup(WalletSetup::Disconnect).post();
+        let _ = WalletBridgeSetup::Disconnect.try_post_forget();
     }
 
-    pub fn handle_wallet_message(state: Rc<Self>, msg: WalletMsg) {
+    fn request_wallet_address(state: Rc<Self>) {
+        spawn_local(clone!(state => async move {
+            log::info!("MAKING REQUEST..");
+            match WalletBridgeRequest::WalletInfo.request().await {
+                WalletBridgeResponse::WalletInfo(info) => {
+                    state.wallet_info.set(info);
+                    state.initializing.set_neq(false);
+                },
+                _ => {
+                    log::info!("unexpected wallet info response..");
+                }
+            }
+        }));
+    }
+
+    //App is the only place with this top-level handler
+    //and it needs insight into the raw WalletBridge wrappers
+    pub fn handle_wallet_message(state: Rc<Self>, msg: WalletBridgeMsg) {
         match msg {
-            WalletMsg::Status(status) => {
+            WalletBridgeMsg::Status(status) => {
                 match status {
-                    WalletStatus::Initializing | WalletStatus::Wallet_Not_Connected => {
-                        state.initializing.set_neq(status == WalletStatus::Initializing); 
+                    WalletBridgeStatus::Initializing | WalletBridgeStatus::Wallet_Not_Connected => {
+                        state.initializing.set_neq(status == WalletBridgeStatus::Initializing); 
                         state.wallet_info.set(None);
                         state.contract_info.set(None);
                     },
-                    WalletStatus::Wallet_Connected => {
+                    WalletBridgeStatus::Wallet_Connected => {
                         if state.wallet_info.lock_ref().is_none() {
                             state.initializing.set_neq(true);
-                            WalletMsg::Request(WalletRequest::Addr).post();
+                            Self::request_wallet_address(state.clone());
                         } else {
                             state.initializing.set_neq(false);
                         }
@@ -27,50 +46,16 @@ impl App {
                 }
             },
 
-            WalletMsg::Window(event) => {
+            WalletBridgeMsg::WindowEvent(event) => {
                 match event {
-                    WalletWindowEvent::Click => {
+                    WalletBridgeWindowEvent::Click => {
                         state.iframe_visible.set_neq(false);
                     }
                 }
             },
-            WalletMsg::Response(resp) => {
-                match resp {
-                    WalletResponse::Addr(info) => {
-                        match info{
-                            Some(info) => {
-                                state.wallet_info.set(Some(info));
-                                state.initializing.set_neq(false);
-                            },
-                            None => {
-                                state.logout();
-                            }
-                        }
-                    },
-                    //APP is not interested in other responses
-                    _ => {
-                    }
-                    /*
-                    WalletResponse::ContractUpload(id) => {
-                        match id {
-                            Some(id) => {
-                                log::info!("Got contract id: {}", id);
-                            },
-                            None => {
-                                log::info!("unable to upload contract!");
-                            }
-                        }
-                    }
-                    */
-                }
-            },
 
-            WalletMsg::Request(_) => {
-                log::warn!("Strange, got wallet request on parent frame...");
-            },
-            WalletMsg::Setup(_) => {
-                log::warn!("Strange, got wallet setup on parent frame...");
-            }
+            _ => { }
+
         }
     }
 }

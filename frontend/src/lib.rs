@@ -18,6 +18,7 @@ use app::App;
 pub async fn main_js() {
     setup_logger();
     config::init_stylesheet();
+    utils::contract::init_known_contracts();
     dominator::append_dom(&dominator::body(), App::render(App::new()));    
 }
 

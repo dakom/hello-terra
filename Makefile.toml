@@ -26,6 +26,12 @@ script = ["mkdir ./frontend/media/contracts"]
 ##  HIGH-LEVEL ALL      ##
 ##########################
 
+[tasks.dev]
+run_task = { name = [
+    "frontend-dev",
+    "contracts-dev",
+], fork = true, parallel = true }
+
 [tasks.build-release]
 run_task = { name = [
     "frontend-build",
@@ -97,6 +103,10 @@ cwd = "./frontend/iframe"
 ##########################
 ##  CONTRACT - REGISTRY ##
 ##########################
+
+[tasks.contract-account-dev]
+command = "watchexec"
+args = ["-w", "./contracts/account", "cargo make contract-account-build-release"]
 
 [tasks.contract-account-build-release]
 run_task = { name = [

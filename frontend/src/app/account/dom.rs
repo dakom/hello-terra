@@ -27,19 +27,15 @@ impl Account {
     }
     fn render_loading(state: Rc<Self>) -> Dom {
 
-        ExecuteMsg::FullSummary(FullSummaryRequest {})
-            .post(&state.contract_info.addr, None);
 
         html!("h1", {
-            .text("Loading...")
-            .global_event(clone!(state => move |evt:dominator_helpers::events::Message| {
-                if let Ok(msg) = evt.try_serde_data::<WalletMsg>() {
-                    Self::handle_loading_message(state.clone(), msg);
-                } else {
-                    //example: log::info!("{}", WalletMsg::Status("hello".to_string()).to_json_string());
-                    log::error!("hmmm got other iframe message...");
-                }
+            .future(clone!(state => async move {
+                /*
+                ExecuteMsg::FullSummary(FullSummaryRequest {})
+                    .post(&state.contract_info.addr, None);
+                    */
             }))
+            .text("Loading Funds...")
         })
     }
 
@@ -73,7 +69,7 @@ impl Account {
                             .text("system id:")
                         }),
                         html!("td", {
-                            .text(&format!("{}", self.contract_info.id))
+                            .text(&format!("{}", self.contract_info.code_id))
                         })
                     ])
                 })
