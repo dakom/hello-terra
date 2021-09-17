@@ -40,6 +40,7 @@ use gloo_events::EventListener;
 use futures::channel::oneshot;
 use js_sys::{ArrayBuffer, Uint8Array};
 use awsm_web::loaders::fetch::{Response, fetch_url};
+
 #[derive(Deserialize, Serialize, Debug, Clone, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub struct ContractInfo {

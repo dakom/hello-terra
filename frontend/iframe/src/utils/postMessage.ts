@@ -1,5 +1,6 @@
 import {WalletStatus} from "@terra-money/wallet-provider";
 import {IframeMessageKind, WalletBridgeWindowEvent, WalletBridgeResponse} from "../types";
+import {TAG} from "../config";
 
 ///// IFRAME MESSAGE HANDLING //////
 //// IT IS ALL SETUP TO MATCH SERDE ON THE RUST SIDE /////
@@ -17,7 +18,7 @@ export function postWalletBridgeResponse(bridge_id: number | undefined, resp: Wa
 
 function postIframeMsg(bridge_id:number | undefined, msg: any) {
 
-  const payload = [bridge_id ? bridge_id : 0, msg];
+  const payload = [bridge_id ? bridge_id : 0, TAG, msg];
 
   console.log("FROM IFRAME:", payload);
 

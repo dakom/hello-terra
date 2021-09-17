@@ -3,7 +3,7 @@ import { MsgStoreCode, MsgInstantiateContract, MsgExecuteContract, MnemonicKey, 
 import React, {useEffect, useState} from 'react';
 import {contractUpload, contractInstantiate, contractExecute} from "./utils/contract";
 import {postWalletBridgeResponse, postWalletBridgeStatus, postWalletBridgeWindowEvent} from "./utils/postMessage";
-import {mainnet, walletConnectChainIds} from "./config";
+import {mainnet, TAG, walletConnectChainIds} from "./config";
 import {
   IframeMsg,
   IframeMessageKind,
@@ -73,11 +73,16 @@ function WalletManager() {
       const onMessage = (evt:any) => {
         console.log("TO IFRAME:", evt.data);
 
-        if(!Array.isArray(evt.data) || evt.data.length < 2) {
+        if(!Array.isArray(evt.data) || evt.data.length < 3) {
           return;
         }
 
-        const [bridge_id, msg]:IframeMsg = evt.data;
+        const [bridge_id, tag, msg]:IframeMsg = evt.data;
+
+        if(tag !== TAG) {
+          console.log("not meant for this iframe");
+          return;
+        }
 
         switch(msg.kind) {
 

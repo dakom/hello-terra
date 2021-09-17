@@ -24,3 +24,6 @@ export const TRANSACTION_INFO_TIMEOUT:number = 1000 * 60 * 5; // 5 mins
 
 // default amount of time to wait before polling a transaction hash
 export const TRANSACTION_INFO_POLL_WAIT:number = 500; //500ms
+
+// to early-exit messages not meant for us
+export const TAG = "WALLET_BRIDGE";

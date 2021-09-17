@@ -3,32 +3,54 @@
 # [LIVE DEMO](https://dakom.github.io/hello-terra)
 # [SHARED CRATE DOCS](https://dakom.github.io/hello-terra/docs/shared)
 
-# GOALS
+# User Experience
 
-## User Experience
 * Login via Terra Station chrome extension, mobile app or manual entry
 * No other auth or database (state is persisted on-chain, contract addresses are stored locally in-browser)
-* Reactive to live changes on the network (correct balance shown in multiple tabs)
-* Simple bootstrapping for new system (no need for user to manually compile/select .wasm files) 
+* Simple bootstrapping for LocalTerra (no need for user to manually compile/select .wasm files) 
 * Simple fake bank account (deposit, withdraw, view balance)
 
-# Technical
+# Dev experience
 
-* Wallet providers are abstracted away (e.g. manual mode is internal, not via the official provider)
+* Playtest all contracts with a frontend (this example only has one - but would be very useful important for Cosmwasm's Actor model!)
+* With a debug setting - live reload all 4 frontend parts when source changes (main app, iframe controller, contracts, media)
+* Cargo-make commands for composing different build pipelines
+* Boilerplate to make the Rust-everywhere pipeline work, just add new message types
+* Separate deployment targets, easy-to-find configuration files
+* Async Rust wrappers
+
+# Implementation details 
+
+* Wallet providers are abstracted away (e.g. manual mode is internal, not via the official Terra provider, switching is seamless)
 * No need or use for JSON schema (real cargo docs - see above)
-* Native Rust types for message payloads enfoced _at compile-time_ (contracts and frontend are guaranteed to typecheck with eachother) 
+* Store real Rust types in the contract (frontend has cosmwasm_std too!), so no silly String<>Addr conversion or error-prone number types
+* Contracts and frontend are guaranteed to typecheck with eachother _at compile-time_
 * Frontend main application is pure Rust/WebAssembly, written in the Dominator framework (declarative, fast, and awesome)
-* Wallet is handled via a (usually) hidden iframe and a postMessage communication layer (can be abstracted/expanded)
 * Detecting and deploying a new contract is done automatically via Blake3 hash, id, and localstorage lookup
 * Continuous Integration/Deployment of full app via Github Actions (live demo - see above)
-* Good DX (live-reloads when sources change, cross-platform, simple commands, separate local vs. release settings, workspace, etc.)
 
-# Example code for executing a contract
+All the heavy lifting is under the hood, so these are possible:
 
-(TODO - document)
+### Example code for querying a contract
+
+```
+let summary = ContractQueryMsg::new(QueryMsg::AccountSummary)
+    .query::<AccountSummary>()
+    .await;
+```
+
+### Example code for executing a contract
+
+```
+let balance = ContractExecuteMsg::new(ExecuteMsg::Transfer{
+        dest: SomeAddr
+    })
+    .execute::<TransferBalance>()
+    .await;
+```
 
 
-# Iframe / Wallet abstraction / Setup
+### Iframe / Wallet abstraction details
 
 This part requires a bit more heavy lifting
 

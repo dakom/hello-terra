@@ -15,7 +15,7 @@ uuid = { version = "0.8.1", features = ["serde"] }
 cfg-if = "1.0.0"
 log = "0.4.14"
 schemars = "0.8.3"
-
+cosmwasm-std = "0.16.2"
 # wasm
 wasm-bindgen = { version = "0.2.74", features = ["nightly"], optional = true}
 js-sys = { version = "0.3.51", optional = true }

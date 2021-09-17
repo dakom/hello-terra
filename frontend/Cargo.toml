@@ -61,6 +61,7 @@ gloo-events = "0.1.1"
 awsm_web = { version = "0.28.1", features = ["loaders", "serde_iso"] }
 dotenv = "0.15.0"
 base64 = "0.13.0"
+cosmwasm-std = "0.16.2"
 
 [features]
 quiet = []

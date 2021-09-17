@@ -1,10 +1,11 @@
 use std::rc::Rc;
+use cosmwasm_std::{Addr, Decimal};
 use dominator::{html, Dom, clone};
 use super::{state::*, styles};
 use crate::components::{button::*, image::*};
 use futures_signals::signal::SignalExt;
 use crate::utils::prelude::*;
-use shared::execute::{ExecuteMsg, summary::FullSummaryRequest};
+use shared::{query::{QueryMsg, AccountSummary}};
 
 impl Account {
     pub fn render(state: Rc<Self>) -> Dom {
@@ -30,9 +31,17 @@ impl Account {
 
         html!("h1", {
             .future(clone!(state => async move {
+                let summary = ContractQueryMsg(AccountSummary {
+                    name: "foo".to_string(),
+                    addr: Addr::unchecked("bar"),
+                    total_history: Decimal::one()
+                })
+                    .query::<AccountSummary>()
+                    .await;
                 /*
-                ExecuteMsg::FullSummary(FullSummaryRequest {})
-                    .post(&state.contract_info.addr, None);
+                let summary = ContractQueryMsg(QueryMsg::AccountSummary)
+                    .query::<AccountSummary>()
+                    .await;
                     */
             }))
             .text("Loading Funds...")

@@ -7,7 +7,7 @@ type _IframeMsg =
   | WalletBridgeRequestMsg
   | WalletBridgeResponseMsg;
 
-export type IframeMsg = [number | undefined, _IframeMsg];
+export type IframeMsg = [number | undefined, string, _IframeMsg];
 
 export enum IframeMessageKind {
   WalletBridgeStatus = "wallet_bridge_status",

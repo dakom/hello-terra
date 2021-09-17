@@ -55,8 +55,12 @@ impl App {
             .global_event(clone!(state => move |evt:dominator_helpers::events::Message| {
                 //log::info!("EXAMPLE: {}", serde_json::to_string(&crate::utils::wallet_bridge::WalletBridgeMsg::Status(crate::utils::wallet_bridge::WalletBridgeStatus::Wallet_Not_Connected)).unwrap_ext());
 
-                if let Ok((bridge_id, msg)) = evt.try_serde_data::<(u64, WalletBridgeMsg)>() {
-                    Self::handle_wallet_message(state.clone(), msg);
+                if let Ok((bridge_id, tag, msg)) = evt.try_serde_data::<(u64, String, WalletBridgeMsg)>() {
+                    if tag != crate::utils::wallet_bridge::TAG {
+                        log::info!("Not meant for us...");
+                    } else {
+                        Self::handle_wallet_message(state.clone(), msg);
+                    }
                 } 
             }))
         })
