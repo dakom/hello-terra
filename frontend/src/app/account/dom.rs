@@ -5,7 +5,7 @@ use super::{state::*, styles};
 use crate::components::{button::*, image::*};
 use futures_signals::signal::SignalExt;
 use crate::utils::prelude::*;
-use shared::{query::{QueryMsg, AccountSummary}};
+use shared::{execute::{ExecuteMsg, AccountSummary}};
 
 impl Account {
     pub fn render(state: Rc<Self>) -> Dom {
@@ -31,6 +31,14 @@ impl Account {
 
         html!("h1", {
             .future(clone!(state => async move {
+                let summary = ContractExecuteMsg{
+                    addr: state.contract_info.addr.clone(),
+                    msg: ExecuteMsg::GetAccountSummary,
+                    coins: None,
+                }.execute::<AccountSummary>().await;
+
+                log::info!("{:?}", summary);
+                /*
                 let summary = ContractQueryMsg(AccountSummary {
                     name: "foo".to_string(),
                     addr: Addr::unchecked("bar"),
@@ -38,6 +46,7 @@ impl Account {
                 })
                     .query::<AccountSummary>()
                     .await;
+                    */
                 /*
                 let summary = ContractQueryMsg(QueryMsg::AccountSummary)
                     .query::<AccountSummary>()

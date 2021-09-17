@@ -4,13 +4,11 @@ use serde::{Deserialize, Serialize};
 
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum QueryMsg {
-    AccountSummary
+pub enum ExecuteMsg {
+    GetAccountSummary
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
 pub struct AccountSummary {
     pub name: String,
     pub addr: Addr,

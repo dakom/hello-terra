@@ -5,7 +5,9 @@ type _IframeMsg =
   WalletBridgeStatusMsg 
   | WalletBridgeWindowMsg
   | WalletBridgeRequestMsg
-  | WalletBridgeResponseMsg;
+  | WalletBridgeResponseMsg
+  | ContractInstantiate
+  | ContractExecute
 
 export type IframeMsg = [number | undefined, string, _IframeMsg];
 
@@ -14,6 +16,9 @@ export enum IframeMessageKind {
   WalletBridgeWindowEvent = "wallet_bridge_window_event",
   WalletBridgeRequest = "wallet_bridge_request",
   WalletBridgeResponse = "wallet_bridge_response",
+  ContractInstantiate = "contract_instantiate",
+  ContractExecute = "contract_execute",
+  ContractQuery = "contract_query",
 }
 
 export type WalletBridgeStatusMsg = {
@@ -45,8 +50,6 @@ export type WalletBridgeRequest =
   WalletBridgeRequestSetup
   | WalletBridgeRequestWalletInfo
   | WalletBridgeRequestContractUpload
-  | WalletBridgeRequestContractInstantiate
-  | WalletBridgeRequestContractExecute;
 
 export type WalletBridgeRequestSetup = 
   { kind: WalletBridgeRequestKind.Setup, data: {kind: WalletBridgeSetupKind.ConnectExtension }}
@@ -66,8 +69,6 @@ export enum WalletBridgeRequestKind {
   Setup = "setup",
   WalletInfo = "wallet_info",
   ContractUpload = "contract_upload",
-  ContractInstantiate = "contract_instantiate",
-  ContractExecute = "contract_execute",
 }
 
 export type WalletBridgeRequestWalletInfo = {
@@ -80,34 +81,14 @@ export type WalletBridgeRequestContractUpload = {
   data: string 
 }
 
-export type WalletBridgeRequestContractInstantiate = {
-  kind: WalletBridgeRequestKind.ContractInstantiate,
-  data: {
-    id: number
-  } 
-}
-
-
-export type WalletBridgeRequestContractExecute = {
-  kind: WalletBridgeRequestKind.ContractExecute,
-  data: {
-    addr: string,
-    //coins:? Coins, 
-    msg: any 
-  } 
-}
 /// WalletBridge Responses 
 export type WalletBridgeResponse = 
   WalletBridgeResponseWalletInfo
   | WalletBridgeResponseContractUpload
-  | WalletBridgeResponseContractInstantiate
-  | WalletBridgeResponseContractExecute;
 
 export enum WalletBridgeResponseKind {
   WalletInfo = "wallet_info",
   ContractUpload = "contract_upload",
-  ContractInstantiate = "contract_instantiate",
-  ContractExecute = "contract_execute",
 }
 
 export type WalletBridgeResponseWalletInfo = {
@@ -120,11 +101,18 @@ export type WalletBridgeResponseContractUpload = {
   data?: number 
 }
 
-export type WalletBridgeResponseContractInstantiate = {
-  kind: WalletBridgeResponseKind.ContractInstantiate,
-  data?: string
-}
-export type WalletBridgeResponseContractExecute = {
-  kind: WalletBridgeResponseKind.ContractExecute,
-  data?: string
-}
+export type ContractInstantiate = {
+  kind: IframeMessageKind.ContractInstantiate, 
+  data: {
+    id: number,
+    msg?: any
+  } 
+};
+
+export type ContractExecute = {
+  kind: IframeMessageKind.ContractExecute, 
+  data: {
+    addr: string,
+    msg: any,
+  } 
+};

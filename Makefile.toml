@@ -106,7 +106,7 @@ cwd = "./frontend/iframe"
 
 [tasks.contract-account-dev]
 command = "watchexec"
-args = ["-w", "./contracts/account", "cargo make contract-account-build-release"]
+args = ["-w", "./contracts/account", "-w", "./shared", "cargo make contract-account-build-release"]
 
 [tasks.contract-account-build-release]
 run_task = { name = [

@@ -33,7 +33,7 @@ impl Registry {
 
     pub fn instantiate_contract(state: Rc<Self>, contract_id: u64) {
         state.loader.load(clone!(state, contract_id => async move {
-            if let Some(contract_info) = contract::instantiate_contract(&state.wallet_info, contract_id.clone()).await {
+            if let Some(contract_info) = contract::instantiate_contract(&state.wallet_info, contract_id.clone(), None::<()>).await {
                 state.app.contract_info.set(Some(contract_info));
             }
         }));

@@ -183,32 +183,25 @@ pub async fn upload_contract_file(wallet_info: &WalletInfo, file_hash:&String, f
     }
 }
 
-pub async fn instantiate_contract(wallet_info: &WalletInfo, contract_id: u64) -> Option<ContractInfo> {
+pub async fn instantiate_contract<T: Serialize>(wallet_info: &WalletInfo, contract_id: u64, msg: Option<T>) -> Option<ContractInfo> {
 
-    let msg = ContractInstantiateMsg { id: contract_id };
+    let addr = ContractInstantiateMsg { id: contract_id, msg}.instantiate().await;
 
-    match WalletBridgeRequest::ContractInstantiate(msg).request().await {
-        WalletBridgeResponse::ContractInstantiate(addr) => {
-            if let Some(addr) = addr { 
-                let key = ContractAddrLookupKey {
-                    chain_id: wallet_info.chain_id.clone(),
-                    owner_addr: wallet_info.addr.clone(),
-                    code_id: contract_id.clone()
-                };
-                set_contract_addr(key, addr.clone());
-                Some(ContractInfo {
-                    code_id: contract_id,
-                    addr,
-                    chain_id: wallet_info.chain_id.clone(),
-                })
-            } else {
-                web_sys::window().unwrap_ext().alert_with_message("unable to instantiate contract!");
-                None
-            }
-        }
-        _ => {
-            None
-        }
+    if let Some(addr) = addr { 
+        let key = ContractAddrLookupKey {
+            chain_id: wallet_info.chain_id.clone(),
+            owner_addr: wallet_info.addr.clone(),
+            code_id: contract_id.clone()
+        };
+        set_contract_addr(key, addr.clone());
+        Some(ContractInfo {
+            code_id: contract_id,
+            addr,
+            chain_id: wallet_info.chain_id.clone(),
+        })
+    } else {
+        web_sys::window().unwrap_ext().alert_with_message("unable to instantiate contract!");
+        None
     }
 }
 

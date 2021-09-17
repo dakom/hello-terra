@@ -6,8 +6,6 @@
 
     For typical use, just add types to messages.rs and call `let bar = ContractExecuteMsg {msg: Foo, ...}execute::<Bar>().await`
 
-    Same for Contract Query messages
-
 */
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -21,8 +19,10 @@ pub struct ContractExecuteMsg<T: Serialize> {
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "snake_case")]
-pub struct ContractQueryMsg<T> (pub T);
-
+pub struct ContractInstantiateMsg<T> {
+    pub id: u64,
+    pub msg: Option<T>
+}
 //TODO - Instantiation should also be here since it can receive dynamic data
 
 /// heavy lifting below
@@ -68,6 +68,7 @@ static MESSAGE_COUNTER:Lazy<AtomicU64> = Lazy::new(|| AtomicU64::new(1));
 //The bridge
 //All methods consume Self
 pub struct WalletBridge <T: Serialize> {
+    is_payload_first: bool,
     data: T,
     id: u64,
 }
@@ -91,6 +92,7 @@ impl <T: Serialize> WalletBridge <T> {
         let id = MESSAGE_COUNTER.load(Ordering::SeqCst);
         MESSAGE_COUNTER.store(id+1, Ordering::SeqCst);
         Self {
+            is_payload_first: false,
             data,
             id
         }
@@ -105,6 +107,7 @@ impl <T: Serialize> WalletBridge <T> {
     //if the result is None, it means the request was cancelled somehow
     pub async fn try_raw_post<R: DeserializeOwned + 'static>(mut self) -> Option<Result<R, PostError>> {
         let window = web_sys::window().unwrap();
+        let is_payload_first = self.is_payload_first;
         let self_id = self.id;
 
         let (sender, receiver) = oneshot::channel::<Result<R, PostError>>();
@@ -113,9 +116,32 @@ impl <T: Serialize> WalletBridge <T> {
         let listener = Rc::new(RefCell::new(None));
 
         *listener.borrow_mut() = Some(EventListener::new(&window, "message", clone!(listener => move |evt| {
-            log::info!("got message");
             let evt:web_sys::MessageEvent = evt.clone().unchecked_into();
-            let msg = match serde_wasm_bindgen::from_value::<(u64, String, R)>(evt.data()) {
+
+            //hehe... https://github.com/terra-money/terra.js/issues/133
+            let msg = if is_payload_first {
+                let msg = serde_wasm_bindgen::from_value::<(u64, String, String)>(evt.data());
+                match msg {
+                    Ok((id, tag, data)) => {
+                        match base64::decode(data) {
+                            Ok(data) => {
+                                bincode::deserialize::<R>(&data)
+                                    .map(|msg| (id, tag, msg))
+                                    .map_err(|err| format!("{:?}", err))
+                            },
+                            Err(err) => {
+                                Err(format!("{:?}", err))
+                            }
+                        }
+                    }
+                    Err(err) => Err(format!("{:?}", err))
+                }
+            } else {
+                serde_wasm_bindgen::from_value::<(u64, String, R)>(evt.data()) 
+                    .map_err(|err| format!("{:?}", err))
+            };
+            
+            let msg = match msg {
                 Ok((id, tag, res)) => {
                     if tag != TAG {
                         log::info!("Got message for different iframe, ignoring!");
@@ -128,7 +154,7 @@ impl <T: Serialize> WalletBridge <T> {
                     }
                 },
                 Err(err) => {
-                    Some(Err(PostError::Serde(err)))
+                    Some(Err(PostError::String(err)))
                 }
             };
 
@@ -215,7 +241,6 @@ pub enum WalletBridgeRequest {
     Setup(WalletBridgeSetup),
     WalletInfo,
     ContractUpload(String),
-    ContractInstantiate(ContractInstantiateMsg),
 }
 
 impl From<WalletBridgeRequest> for WalletBridgeMsg {
@@ -230,7 +255,6 @@ impl From<WalletBridgeRequest> for WalletBridgeMsg {
 pub enum WalletBridgeResponse {
     WalletInfo(Option<WalletInfo>),
     ContractUpload(Option<u64>),
-    ContractInstantiate(Option<String>),
 }
 
 impl From<WalletBridgeResponse> for WalletBridgeMsg {
@@ -272,20 +296,7 @@ pub enum WalletBridgeWindowEvent {
     Click,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-#[serde(rename_all = "snake_case")]
-pub struct ContractInstantiateMsg {
-    pub id: u64
-}
 
-impl ContractInstantiateMsg {
-    pub async fn instantiate(self) -> Option<String> {
-        match WalletBridgeRequest::ContractInstantiate(self).request().await {
-            WalletBridgeResponse::ContractInstantiate(addr) => addr,
-            _ => None
-        }
-    }
-}
 
 
 /// Contract wrapping
@@ -296,12 +307,25 @@ impl ContractInstantiateMsg {
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(tag = "kind", content = "data")]
 pub enum ContractWrapper<T: Serialize> {
+    #[serde(rename = "contract_instantiate")]
+    Instantiate(ContractInstantiateMsg<T>),
     #[serde(rename = "contract_execute")]
     Execute(ContractExecuteMsg<T>),
-    #[serde(rename = "contract_query")]
-    Query(ContractQueryMsg<T>),
 }
 
+
+impl <T: Serialize> ContractInstantiateMsg<T> {
+    fn wrap(self) -> ContractWrapper<T> {
+        ContractWrapper::Instantiate(self)
+    } 
+
+    pub async fn instantiate(self) -> Option<String> {
+        self.try_instantiate().await.unwrap_ext().unwrap_ext()
+    }
+    pub async fn try_instantiate(self) -> Option<Result<Option<String>, PostError>> {
+        WalletBridge::new(self.wrap()).try_raw_post::<Option<String>>().await
+    }
+}
 
 impl <T: Serialize> ContractExecuteMsg<T> {
     fn wrap(self) -> ContractWrapper<T> {
@@ -309,26 +333,14 @@ impl <T: Serialize> ContractExecuteMsg<T> {
     } 
 
     pub async fn execute<R: DeserializeOwned + 'static>(self) -> R {
-        WalletBridge::new(self.wrap()).raw_post::<R>().await
-    }
-    pub async fn try_execute<R: DeserializeOwned + 'static>(mut self) -> Option<Result<R, PostError>> {
-        WalletBridge::new(self.wrap()).try_raw_post::<R>().await
+        self.try_execute().await.unwrap_ext().unwrap_ext()
 
     }
-}
+    pub async fn try_execute<R: DeserializeOwned + 'static>(self) -> Option<Result<R, PostError>> {
+        let mut bridge = WalletBridge::new(self.wrap());
+        bridge.is_payload_first = true;
 
-
-
-impl <T:Serialize> ContractQueryMsg<T> {
-    fn wrap(self) -> ContractWrapper<T> {
-        ContractWrapper::Query(self)
-    } 
-    pub async fn query<R: DeserializeOwned + 'static>(self) -> R {
-        WalletBridge::new(self.wrap()).raw_post::<R>().await
-    }
-
-    pub async fn try_query<R: DeserializeOwned + 'static>(self) -> Option<Result<R, PostError>> {
-        WalletBridge::new(self.wrap()).try_raw_post::<R>().await
+        bridge.try_raw_post::<R>().await
 
     }
 }

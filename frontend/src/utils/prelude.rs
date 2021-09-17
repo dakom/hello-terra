@@ -4,5 +4,5 @@ pub use super::{
     events,
     coin::*,
     contract::ContractInfo,
-    wallet_bridge::{WalletInfo, WalletBridgeExt, WalletBridgeRequestExt, ContractExecuteMsg, ContractQueryMsg}
+    wallet_bridge::{WalletInfo, WalletBridgeExt, WalletBridgeRequestExt, ContractExecuteMsg}
 };

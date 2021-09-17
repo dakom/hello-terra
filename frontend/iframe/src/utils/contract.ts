@@ -49,7 +49,6 @@ export function contractInstantiate(wallet:WalletState, msg:MsgInstantiateContra
         })
 }
 export function contractExecute(wallet:WalletState, msg:MsgExecuteContract):Promise<string> {
-    console.log("posting", msg.toJSON());
     return wallet.post({ 
         //fee: new StdFee(10000, '20000uusd'),
         msgs: [msg] 
@@ -62,11 +61,18 @@ export function contractExecute(wallet:WalletState, msg:MsgExecuteContract):Prom
                     wallet,
                     hash: res.result.txhash,
                     validator: (res:any) => {
+                        //TODO - get binary! https://github.com/terra-money/terra.js/issues/133
                         if(res.logs?.length > 0) {
-                            const eventsByType = res.logs[0].eventsByType;
-                            if(eventsByType) {
-                                console.log(eventsByType);
-                                return Promise.reject("TODO: get contract response...");
+                            const data = res.logs[0].eventsByType.from_contract?.data;
+                            if(data) {
+                                if(Array.isArray(data)) {
+                                     if(data.length > 0) {
+                                         return Promise.resolve(data[0]);
+                                     } else {
+                                         return Promise.reject("empty data array!");
+                                     }
+                                }
+                                return Promise.resolve(data);
                             }
                         }
                         return Promise.reject("bad contract addr!");
