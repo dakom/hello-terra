@@ -55,6 +55,11 @@ run_task = { name = [
     "contract-account-test",
 ]}
 
+[tasks.contracts-test-watch]
+run_task = { name = [
+    "contract-account-test-watch",
+]}
+
 [tasks.build-copy-files]
 script_runner = "@shell"
 script = '''
@@ -130,3 +135,14 @@ args = ["-Os", "./target/wasm32-unknown-unknown/release/contract_account.wasm", 
 [tasks.contract-account-hash-release]
 script_runner = "@shell"
 script = ["b3sum --no-names ./frontend/media/contracts/contract-account.wasm > ./frontend/media/contracts/contract-account-hash.txt"] 
+
+
+[tasks.contract-account-test]
+command = "cargo"
+args = ["test", "--no-default-features"]
+cwd = "./contracts/account"
+
+[tasks.contract-account-test-watch]
+command = "cargo"
+args = ["watch", "-w", "../../shared", "-x", "test --no-default-features"]
+cwd = "./contracts/account"

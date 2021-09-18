@@ -9,7 +9,7 @@ use crate::{
     config::REMOTE_TARGET, 
     utils::{
         prelude::*,
-        wallet_bridge::{WALLET_IFRAME, WalletBridgeMsg}
+        wallet_bridge::{WALLET_IFRAME, WalletBridgeMsgWrapper}
     }
 };
 
@@ -53,9 +53,9 @@ impl App {
             //So App needs this top-level listener to iframe messages
             //But it is the *only* place. Everywhere else is proper Futures
             .global_event(clone!(state => move |evt:dominator_helpers::events::Message| {
-                //log::info!("EXAMPLE: {}", serde_json::to_string(&crate::utils::wallet_bridge::WalletBridgeMsg::Status(crate::utils::wallet_bridge::WalletBridgeStatus::Wallet_Not_Connected)).unwrap_ext());
+                //log::info!("EXAMPLE: {}", serde_json::to_string(&crate::utils::wallet_bridge::WalletBridgeMsgWrapper::Status(crate::utils::wallet_bridge::WalletBridgeStatus::Wallet_Not_Connected)).unwrap_ext());
 
-                if let Ok((bridge_id, tag, msg)) = evt.try_serde_data::<(u64, String, WalletBridgeMsg)>() {
+                if let Ok((bridge_id, tag, msg)) = evt.try_serde_data::<(u64, String, WalletBridgeMsgWrapper<()>)>() {
                     if tag != crate::utils::wallet_bridge::TAG {
                         log::info!("Not meant for us...");
                     } else {

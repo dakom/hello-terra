@@ -22,7 +22,7 @@ impl Debug {
     pub fn local() -> Self {
         Self {
             _auto_login_manually: true,
-            auto_bootstrap_and_register: true,
+            auto_bootstrap_and_register: false,
             has_auto_loggedin_once: AtomicBool::new(false)
         }
     }

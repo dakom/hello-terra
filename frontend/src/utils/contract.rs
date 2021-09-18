@@ -34,7 +34,7 @@ use std::{
     rc::Rc
 };
 use dominator::clone;
-use super::{prelude::*, storage::*, wallet_bridge::{WalletBridgeRequest, WalletBridgeResponse, ContractInstantiateMsg}}; 
+use super::{prelude::*, storage::*, wallet_bridge::{ContractInstantiateMsg, ContractUploadMsg}}; 
 use web_sys::{File, FileReader};
 use gloo_events::EventListener;
 use futures::channel::oneshot;
@@ -185,7 +185,7 @@ pub async fn upload_contract_file(wallet_info: &WalletInfo, file_hash:&String, f
 
 pub async fn instantiate_contract<T: Serialize>(wallet_info: &WalletInfo, contract_id: u64, msg: Option<T>) -> Option<ContractInfo> {
 
-    let addr = ContractInstantiateMsg { id: contract_id, msg}.instantiate().await;
+    let addr = ContractInstantiateMsg { id: contract_id, msg}.instantiate().await.ok().flatten();
 
     if let Some(addr) = addr { 
         let key = ContractAddrLookupKey {
@@ -200,7 +200,7 @@ pub async fn instantiate_contract<T: Serialize>(wallet_info: &WalletInfo, contra
             chain_id: wallet_info.chain_id.clone(),
         })
     } else {
-        web_sys::window().unwrap_ext().alert_with_message("unable to instantiate contract!");
+        web_sys::window().unwrap_ext().alert_with_message("unable to instantiate contract (check your network)!");
         None
     }
 }
@@ -229,21 +229,17 @@ fn parse_wasm_bytes(buffer:ArrayBuffer) -> Option<String> {
 
 async fn upload_contract(wallet_info: &WalletInfo, file_hash:&String, bytes:String) -> Option<u64> {
 
-    match WalletBridgeRequest::ContractUpload(bytes).request().await {
-        WalletBridgeResponse::ContractUpload(id) => {
-            if let Some(id) = id { 
-                let key = ContractIdLookupKey {
-                    chain_id: wallet_info.chain_id.clone(),
-                    file_hash: file_hash.clone(), 
-                };
-                set_contract_id(key, id);
-                Some(id)
-            } else {
-                web_sys::window().unwrap_ext().alert_with_message("unable to upload contract!");
-                None
-            }
-        }
-        _ => {
+    match ContractUploadMsg(bytes).upload().await {
+        Ok(id) => {
+            let key = ContractIdLookupKey {
+                chain_id: wallet_info.chain_id.clone(),
+                file_hash: file_hash.clone(), 
+            };
+            set_contract_id(key, id);
+            Some(id)
+        },
+        Err(err) => {
+            web_sys::window().unwrap_ext().alert_with_message("unable to upload contract (check your network)!");
             None
         }
     }

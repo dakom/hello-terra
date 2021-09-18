@@ -1,24 +1,23 @@
 use std::rc::Rc;
 use super::state::App;
-use crate::utils::{prelude::*, wallet_bridge::{WalletBridgeMsg, WalletBridgeSetup, WalletBridgeStatus, WalletBridgeResponse, WalletBridgeRequest, WalletBridgeWindowEvent}};
+use crate::utils::{prelude::*, wallet_bridge::{WalletBridgeMsgWrapper, WalletBridgeSetupRequest, WalletBridgeStatus, WalletBridgeWindowEvent}};
 use dominator::clone;
 use wasm_bindgen_futures::spawn_local;
 
 impl App {
     pub fn logout(&self) {
-        let _ = WalletBridgeSetup::Disconnect.try_post_forget();
+        let _ = WalletBridgeSetupRequest::Disconnect.request_forget();
     }
 
     fn request_wallet_address(state: Rc<Self>) {
         spawn_local(clone!(state => async move {
-            log::info!("MAKING REQUEST..");
-            match WalletBridgeRequest::WalletInfo.request().await {
-                WalletBridgeResponse::WalletInfo(info) => {
+            match WalletBridgeSetupRequest::WalletInfo.request().await {
+                Ok(info) => {
                     state.wallet_info.set(info);
                     state.initializing.set_neq(false);
                 },
                 _ => {
-                    log::info!("unexpected wallet info response..");
+                    log::info!("error getting wallet info");
                 }
             }
         }));
@@ -26,9 +25,11 @@ impl App {
 
     //App is the only place with this top-level handler
     //and it needs insight into the raw WalletBridge wrappers
-    pub fn handle_wallet_message(state: Rc<Self>, msg: WalletBridgeMsg) {
+    pub fn handle_wallet_message(state: Rc<Self>, msg: WalletBridgeMsgWrapper<()>) {
         match msg {
-            WalletBridgeMsg::Status(status) => {
+            WalletBridgeMsgWrapper::Status(status) => {
+                log::info!("CHANGING STATUS: {:?}", status);
+
                 match status {
                     WalletBridgeStatus::Initializing | WalletBridgeStatus::Wallet_Not_Connected => {
                         state.initializing.set_neq(status == WalletBridgeStatus::Initializing); 
@@ -46,7 +47,7 @@ impl App {
                 }
             },
 
-            WalletBridgeMsg::WindowEvent(event) => {
+            WalletBridgeMsgWrapper::WindowEvent(event) => {
                 match event {
                     WalletBridgeWindowEvent::Click => {
                         state.iframe_visible.set_neq(false);

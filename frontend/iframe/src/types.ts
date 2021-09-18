@@ -1,118 +1,77 @@
-import { WalletStatus } from '@terra-money/wallet-provider';
+export type WalletBridgeMsgWrapper = [number | undefined, string, _WalletBridgeMsgWrapper];
 
 //Top-level messages
-type _IframeMsg = 
-  WalletBridgeStatusMsg 
-  | WalletBridgeWindowMsg
-  | WalletBridgeRequestMsg
-  | WalletBridgeResponseMsg
-  | ContractInstantiate
-  | ContractExecute
+type _WalletBridgeMsgWrapper =
+  | SetupRequestMsg 
+  | ContractInstantiateMsg
+  | ContractExecuteMsg
+  | ContractUploadMsg
+  | ContractQueryMsg;
 
-export type IframeMsg = [number | undefined, string, _IframeMsg];
 
-export enum IframeMessageKind {
-  WalletBridgeStatus = "wallet_bridge_status",
-  WalletBridgeWindowEvent = "wallet_bridge_window_event",
-  WalletBridgeRequest = "wallet_bridge_request",
-  WalletBridgeResponse = "wallet_bridge_response",
+export enum MessageKind {
+  SetupRequest = "setup_request",
   ContractInstantiate = "contract_instantiate",
   ContractExecute = "contract_execute",
   ContractQuery = "contract_query",
+  ContractUpload = "contract_upload",
 }
 
-export type WalletBridgeStatusMsg = {
-  kind: IframeMessageKind.WalletBridgeStatus, 
-  data: WalletStatus
-};
 
-export type WalletBridgeWindowMsg = {
-  kind: IframeMessageKind.WalletBridgeWindowEvent, 
-  data: WalletBridgeWindowEvent
-};
-
-export type WalletBridgeRequestMsg = {
-  kind: IframeMessageKind.WalletBridgeRequest, 
-  data: WalletBridgeRequest 
-};
-
-export type WalletBridgeResponseMsg = {
-  kind: IframeMessageKind.WalletBridgeResponse, 
-  data: WalletBridgeResponse
-};
-
-export enum WalletBridgeWindowEvent {
+export enum WindowEvent {
   Click = "click",
 }
 
-/// WalletBridge Requests
-export type WalletBridgeRequest = 
-  WalletBridgeRequestSetup
-  | WalletBridgeRequestWalletInfo
-  | WalletBridgeRequestContractUpload
+export type SetupRequestMsg = {
+  kind: MessageKind.SetupRequest 
+  data: SetupRequest 
+};
 
-export type WalletBridgeRequestSetup = 
-  { kind: WalletBridgeRequestKind.Setup, data: {kind: WalletBridgeSetupKind.ConnectExtension }}
-  | { kind: WalletBridgeRequestKind.Setup, data: {kind: WalletBridgeSetupKind.ConnectMobile }}
-  | { kind: WalletBridgeRequestKind.Setup, data: {kind: WalletBridgeSetupKind.ConnectManual, data: [string, string, string]}}
-  | { kind: WalletBridgeRequestKind.Setup, data: {kind: WalletBridgeSetupKind.Install }}
-  | { kind: WalletBridgeRequestKind.Setup, data: {kind: WalletBridgeSetupKind.Disconnect }};
+export type SetupRequest = 
+  { kind: SetupRequestKind.ConnectExtension }
+  | { kind: SetupRequestKind.ConnectMobile }
+  | { kind: SetupRequestKind.ConnectManual, data: [string, string, string]}
+  | { kind: SetupRequestKind.Install }
+  | { kind: SetupRequestKind.Disconnect }
+  | { kind: SetupRequestKind.WalletInfo };
 
-export enum WalletBridgeSetupKind {
+export enum SetupRequestKind {
   ConnectExtension = "connect_extension",
   ConnectMobile = "connect_mobile",
-  ConnectManual = "connect_manually",
   Install = "install",
   Disconnect = "disconnect",
-}
-export enum WalletBridgeRequestKind {
-  Setup = "setup",
-  WalletInfo = "wallet_info",
-  ContractUpload = "contract_upload",
+  ConnectManual = "connect_manually",
+  WalletInfo = "wallet_info"
 }
 
-export type WalletBridgeRequestWalletInfo = {
-  kind: WalletBridgeRequestKind.WalletInfo,
-  data?: any
-}
+export type WalletInfoResponse = { addr: string, network_name: string, chain_id: string};
 
-export type WalletBridgeRequestContractUpload = {
-  kind: WalletBridgeRequestKind.ContractUpload,
+export type ContractUploadMsg = {
+  kind: MessageKind.ContractUpload
   data: string 
 }
 
-/// WalletBridge Responses 
-export type WalletBridgeResponse = 
-  WalletBridgeResponseWalletInfo
-  | WalletBridgeResponseContractUpload
-
-export enum WalletBridgeResponseKind {
-  WalletInfo = "wallet_info",
-  ContractUpload = "contract_upload",
-}
-
-export type WalletBridgeResponseWalletInfo = {
-  kind: WalletBridgeResponseKind.WalletInfo,
-  data?: { addr: string, network_name: string, chain_id: string}
-}
-
-export type WalletBridgeResponseContractUpload = {
-  kind: WalletBridgeResponseKind.ContractUpload,
-  data?: number 
-}
-
-export type ContractInstantiate = {
-  kind: IframeMessageKind.ContractInstantiate, 
+export type ContractInstantiateMsg = {
+  kind: MessageKind.ContractInstantiate
   data: {
     id: number,
     msg?: any
   } 
-};
+}
 
-export type ContractExecute = {
-  kind: IframeMessageKind.ContractExecute, 
+export type ContractExecuteMsg = {
+  kind: MessageKind.ContractExecute
+  data: {
+    addr: string,
+    msg: any,
+    coins?: any
+  } 
+}
+
+export type ContractQueryMsg = {
+  kind: MessageKind.ContractQuery
   data: {
     addr: string,
     msg: any,
   } 
-};
+}

@@ -3,33 +3,32 @@
 # [LIVE DEMO](https://dakom.github.io/hello-terra)
 # [SHARED CRATE DOCS](https://dakom.github.io/hello-terra/docs/shared)
 
-# User Experience
-
-* Login via Terra Station chrome extension, mobile app or manual entry
-* No other auth or database (state is persisted on-chain, contract addresses are stored locally in-browser)
-* Simple bootstrapping for LocalTerra (no need for user to manually compile/select .wasm files) 
-* Simple fake bank account (deposit, withdraw, view balance)
-
 # Dev experience
-
-* Playtest all contracts with a frontend (this example only has one - but would be very useful important for Cosmwasm's Actor model!)
+* Contracts and frontend are guaranteed to typecheck with eachother _at compile-time_ due to sharing the Rust types in a common crate.
+* Use third-party native Rust types like [Decimal](https://docs.rs/cosmwasm-std/latest/cosmwasm_std/struct.Decimal.html) everywhere - prevent (de)serialization errors, floating point errors, and straight up human errors by never worrying about them in the first place! String<>Addr and whatnot conversions be ye gone!
+* Simply call `ContractExecuteMsg(msg).execute().await` or `ContractQueryMsg(msg).query().await` on the _actual_ Rust structs defined in the [shared crate](shared). Not only does (de)serialization work as expected (without having to look at a schema!), these return proper Rust futures which can be used in the full Rust async/await ecosystem (note: cancelling won't abort the low-level RPC/XHR/Promises since we're at the mercy of the Terra.JS API for that, and it doesn't support cancellation)
+* Since we don't need a schema, we don't generate one. Use Cargo Docs instead (see above). Though a schema could be generated too for outside projects to interface with our contracts.
+* Playtest all contracts with a frontend and bootstrapping mechanism when contracts are re-compiled. It's not as fast as unit tests - so don't use it for that. Instead, compare against manually compiling, uploading, and instantiating contracts on change. Compared to that, this automated approach is very fast when it comes time to properly integrate (this example only has one contract - but imagine subcontracts etc.). It's fast enough that sometimes writing unit tests are a waste of time.
 * With a debug setting - live reload all 4 frontend parts when source changes (main app, iframe controller, contracts, media)
 * Cargo-make commands for composing different build pipelines
-* Boilerplate to make the Rust-everywhere pipeline work, just add new message types
+* Simple interface to the wallet-provider bridge. New types don't need to be added often since they are just the wrappers, but when they do it's easy. 
 * Separate deployment targets, easy-to-find configuration files
-* Async Rust wrappers
+* Ci all setup properly
+
+# User Experience
+
+* Login via Terra Station chrome extension, mobile app or manual entry (note: mobile is untested and may require more configuration - switching networks live currently [doesn't react](https://github.com/terra-money/wallet-provider/issues/25))
+* No other auth or database (state is persisted on-chain, contract addresses are stored locally in-browser)
+* Running against LocalTerra? Just hit the "bootstrap" button.
+* Simple fake bank account (deposit, withdraw, view balance)
+
 
 # Implementation details 
 
-* Wallet providers are abstracted away (e.g. manual mode is internal, not via the official Terra provider, switching is seamless)
-* No need or use for JSON schema (real cargo docs - see above)
-* Store real Rust types in the contract (frontend has cosmwasm_std too!), so no silly String<>Addr conversion or error-prone number types
-* Contracts and frontend are guaranteed to typecheck with eachother _at compile-time_
-* Frontend main application is pure Rust/WebAssembly, written in the Dominator framework (declarative, fast, and awesome)
-* Detecting and deploying a new contract is done automatically via Blake3 hash, id, and localstorage lookup
-* Continuous Integration/Deployment of full app via Github Actions (live demo - see above)
+* Wallet providers are abstracted away (e.g. manual mode is internal, not via the official Terra provider, user can't tell the difference)
+* Frontend main application is pure Rust/WebAssembly, written in the [Dominator](https://github.com/Pauan/rust-dominator) framework (declarative, fast, and awesome)
+* Detecting and deploying a new contract is done automatically via Blake3 hash, id, and localstorage lookup - this all happens internally via application/build logic, prior to connecting to the chain (i.e. it's not a replacement for solutions like etherscan etc.)
 
-All the heavy lifting is under the hood, so these are possible:
 
 ### Example code for querying a contract
 
@@ -52,15 +51,13 @@ let balance = ContractExecuteMsg::new(ExecuteMsg::Transfer{
 
 ### Iframe / Wallet abstraction details
 
-This part requires a bit more heavy lifting
-
 `wallet-provider` depends on React, and `terra.js` doesn't bundle nicely with rollup/wasm
 
 So instead of wrangling this into the core application, it's separated out into its own iframe and message-passing mechanism. The only time the UI needs to be displayed is for QR code.
 
 Having this abstraction does have a benefit, since it allows for new wallet providers or even dealing with different chains across a generic API
 
-This does have one downside - the typescript and Rust types for the high-level communication wrappers need to be kept in sync and only a few API calls are supported at the moment. However, This is only needed for these wrappers, not each message use-case. For example, adding new contract message request/response payloads doesn't require any further work (it's all kept in Rust and the wallet is oblivious to the on-the-wire json format). Adding more Terra.JS functionality like Bank Queries and whatnot would only need to be done once.
+This does have one downside though - the typescript and Rust types for the high-level communication wrappers need to be kept in sync and only a few API calls are supported at the moment. However, This is only needed for these wrappers, not each message use-case. For example, adding new contract message request/response payloads doesn't require any further work (it's all kept in Rust and the wallet is oblivious to the on-the-wire json format). Adding more Terra.JS functionality like Bank Queries and whatnot would only need to be done once.
 
 # Local Development
 
@@ -106,9 +103,12 @@ Currently, this project isn't setup for contract migrations
 
 `cargo make contracts-dev` sets up a watcher to run the build-release
 
+# Testing
+
 ## Contract testing 
 
-- `cargo make contracts-test`
+- `cargo make contracts-test` (one-off)
+- `cargo make contracts-test-watch` (with a watcher for file changes)
 
 # CI Setup
 

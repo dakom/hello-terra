@@ -54,6 +54,7 @@ export function contractExecute(wallet:WalletState, msg:MsgExecuteContract):Prom
         msgs: [msg] 
     })
         .then(res => {
+
             if(!res.success) {
                 return Promise.reject(res);
             } else {
@@ -80,4 +81,10 @@ export function contractExecute(wallet:WalletState, msg:MsgExecuteContract):Prom
                 });
             }
         })
+}
+
+export function contractQuery(wallet:WalletState, addr:string, query:any):Promise<any> {
+    console.log(query);
+
+    return wallet.lcd.wasm.contractQuery(addr, query)
 }

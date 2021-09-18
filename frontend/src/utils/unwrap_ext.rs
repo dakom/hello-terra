@@ -21,6 +21,7 @@ pub trait MyUnwrapExt<T>: Sized {
 cfg_if! {
     if #[cfg(all(feature = "wasm-logger", feature = "console_error_panic_hook"))] {
         impl<T> MyUnwrapExt<T> for Option<T> {
+            #[track_caller]
             fn expect_ext(self, message: &str) -> T {
                 self.expect(message)
             }
@@ -30,6 +31,7 @@ cfg_if! {
         where
             E: core::fmt::Debug,
         {
+            #[track_caller]
             fn expect_ext(self, message: &str) -> T {
                 self.expect(message)
             }
@@ -37,6 +39,7 @@ cfg_if! {
     } else {
 
         impl<T> MyUnwrapExt<T> for Option<T> {
+            #[track_caller]
             fn expect_ext(self, message: &str) -> T {
                 self.expect_throw(message)
             }
@@ -46,6 +49,7 @@ cfg_if! {
         where
             E: core::fmt::Debug,
         {
+            #[track_caller]
             fn expect_ext(self, message: &str) -> T {
                 self.expect_throw(message)
             }
