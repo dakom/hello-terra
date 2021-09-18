@@ -144,5 +144,5 @@ cwd = "./contracts/account"
 
 [tasks.contract-account-test-watch]
 command = "cargo"
-args = ["watch", "-w", "../../shared", "-x", "test --no-default-features"]
+args = ["watch", "-w", "../../shared", "-w", ".", "-x", "test --no-default-features"]
 cwd = "./contracts/account"
