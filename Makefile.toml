@@ -48,17 +48,20 @@ run_task = { name = [
 [tasks.contracts-build-release]
 run_task = { name = [
     "contract-account-build-release",
+    "contract-hub-build-release",
 ]}
 
 [tasks.contracts-test]
 run_task = { name = [
     "contract-account-test",
+    "contract-hub-test",
 ]}
 
 [tasks.contracts-test-watch]
 run_task = { name = [
     "contract-account-test-watch",
-]}
+    "contract-hub-test-watch",
+], fork = true, parallel = true }
 
 [tasks.build-copy-files]
 script_runner = "@shell"
@@ -146,6 +149,48 @@ cwd = "./contracts/account"
 command = "cargo"
 args = ["watch", "-w", "../../shared", "-w", ".", "-x", "test --no-default-features"]
 cwd = "./contracts/account"
+
+##########################
+##  CONTRACT - HUB      ##
+##########################
+
+[tasks.contract-hub-dev]
+command = "watchexec"
+args = ["-w", "./contracts/hub", "-w", "./shared", "cargo make contract-hub-build-release"]
+
+[tasks.contract-hub-build-release]
+run_task = { name = [
+    "make-paths",
+    "contract-hub-compile-release",
+    "contract-hub-optimize-release",
+    "contract-hub-hash-release",
+]}
+
+[tasks.contract-hub-compile-release]
+command = "cargo"
+args = ["build", "--release", "--target", "wasm32-unknown-unknown", "--locked"]
+cwd = "./contracts/hub"
+env = { RUSTFLAGS = "-C link-arg=-s" }
+
+[tasks.contract-hub-optimize-release]
+command = "wasm-opt"
+args = ["-Os", "./target/wasm32-unknown-unknown/release/contract_hub.wasm", "-o", "./frontend/media/contracts/contract-hub.wasm"] 
+
+
+[tasks.contract-hub-hash-release]
+script_runner = "@shell"
+script = ["b3sum --no-names ./frontend/media/contracts/contract-hub.wasm > ./frontend/media/contracts/contract-hub-hash.txt"] 
+
+
+[tasks.contract-hub-test]
+command = "cargo"
+args = ["test", "--no-default-features"]
+cwd = "./contracts/hub"
+
+[tasks.contract-hub-test-watch]
+command = "cargo"
+args = ["watch", "-w", "../../shared", "-w", ".", "-x", "test --no-default-features"]
+cwd = "./contracts/hub"
 
 ##########################
 ##  SHARED DOCS         ##

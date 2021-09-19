@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use cosmwasm_std::{Decimal, Deps, DepsMut, Env, MessageInfo, Order, QueryResponse, Response, StdError, StdResult, WasmMsg, to_binary};
+use cosmwasm_std::{Decimal, Deps, DepsMut, Env, MessageInfo, Order, QueryResponse, Response, StdResult, WasmMsg, to_binary};
 use shared::{
     contracts::{
         hub,
@@ -11,10 +11,10 @@ use shared::{
     },
     coin::CoinDenom,
     result::{ContractResult, ContractError},
+    utils::{IntoQueryResultExt, IntoStringResultExt}
 };
 use crate::{
     state::{ACCOUNTS, OWNER, HUB}, 
-    utils::{IntoQueryResultExt, IntoStringResultExt}
 };
 
 pub fn instantiate(

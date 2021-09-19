@@ -171,6 +171,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "contract_hub"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "bincode",
+ "cfg-if 1.0.0",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus",
+ "serde",
+ "shared",
+ "terra-cosmwasm",
+]
+
+[[package]]
 name = "cosmwasm-crypto"
 version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -916,6 +931,8 @@ dependencies = [
 name = "shared"
 version = "0.1.0"
 dependencies = [
+ "base64",
+ "bincode",
  "cfg-if 1.0.0",
  "cosmwasm-std",
  "js-sys",

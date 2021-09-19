@@ -3,6 +3,7 @@ members = [
     "shared",
     "frontend",
 	"contracts/account",
+	"contracts/hub",
 ]
 
 [profile.release]
