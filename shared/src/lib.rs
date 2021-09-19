@@ -1,4 +1,3 @@
-pub mod instantiate;
-pub mod execute;
-pub mod query;
-pub mod error;
+pub mod result;
+pub mod coin;
+pub mod contracts;

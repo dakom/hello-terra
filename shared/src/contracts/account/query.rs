@@ -1,13 +1,10 @@
-use std::collections::HashMap;
-use cosmwasm_std::{Addr, Decimal};
+use cosmwasm_std::Decimal;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
-/// Just a type alias to keep it clear 
-pub type CoinDenom = String;
+use crate::coin::CoinDenom;
 
 /// Send Query messages to read state
-/// This is quicker and consumes less gas than an [ExecuteMsg](crate::execute::ExecuteMsg)
+/// This is quicker and consumes less gas than an [ExecuteMsg](super::execute::ExecuteMsg)
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(tag = "kind", content = "data")]
 pub enum QueryMsg {
@@ -27,6 +24,8 @@ pub struct AvailableCoins {
     pub list: Vec<CoinDenom>,
 }
 
+/// The account summary is per-user
+/// To get a global total_deposits, query the [Hub Contrat](crate::contracts::hub)
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct AccountSummary {
     /// Total balance throughout history of the account 

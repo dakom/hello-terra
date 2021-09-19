@@ -42,6 +42,6 @@ impl <T: Serialize> IntoQueryResultExt for T {
 impl <T: AsRef<[u8]>> IntoStringResultExt for T {
     fn str_result(&self) -> StdResult<&str> {
         std::str::from_utf8(self.as_ref())
-            .map_err(|err| StdError::invalid_utf8("byte slice to string"))
+            .map_err(|_| StdError::invalid_utf8("byte slice to string"))
     }
 }

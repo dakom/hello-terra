@@ -4,40 +4,47 @@ use contract_account::{
     contract::instantiate, 
     contract::execute,
     contract::query,
-    state::{OWNER, ACCOUNTS}
+    state::OWNER
 };
-use shared::{execute::{ExecuteMsg}, error::ERR_NOT_ENOUGH_FUNDS, instantiate::InstantiateMsg, query::{QueryMsg, AvailableCoins, AccountSummary}};
-use cosmwasm_std::{Addr, Decimal, StdError, from_binary, testing::{mock_dependencies, mock_env, mock_info}, to_binary};
-use cosmwasm_std::{Api, Coin, OwnedDeps, Querier, Storage, from_slice};
+use shared::{
+    contracts::account::{
+        execute::{ExecuteMsg}, 
+        instantiate::InstantiateMsg, 
+        query::{QueryMsg, AvailableCoins, AccountSummary}
+    },
+    result::ContractError 
+};
+use cosmwasm_std::{
+    Coin, Addr, Decimal, StdError, from_binary, 
+    testing::{mock_dependencies, mock_env, mock_info}
+};
 
 #[test]
 fn can_instantiate() {
     let mut deps = mock_dependencies(&[]);
-    let info = mock_info("creator", &[]);
-    let env = mock_env();
+    let info = mock_info("hub", &[]);
 
-    let msg = InstantiateMsg{};
+    let msg = InstantiateMsg::new(Addr::unchecked("creator"));
 
     instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let owner = OWNER.load(&deps.storage).unwrap();
 
-    assert_eq!(owner.addr, Addr::unchecked("creator"));
+    assert_eq!(owner, Addr::unchecked("creator"));
 }
 
 #[test]
 fn can_query_coins_empty() {
     let mut deps = mock_dependencies(&[]);
     let info = mock_info("creator", &[]);
-    let env = mock_env();
 
-    let msg = InstantiateMsg{};
+    let msg = InstantiateMsg::new(Addr::unchecked("creator"));
 
     instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let msg = QueryMsg::AvailableCoins;
 
-    let res = query(deps.as_ref(), env, msg).unwrap();
+    let res = query(deps.as_ref(), mock_env(), msg).unwrap();
     let AvailableCoins { list } = from_binary(&res).unwrap();
 
     assert_eq!(list.len(), 0);
@@ -47,15 +54,14 @@ fn can_query_coins_empty() {
 fn can_query_summary_empty() {
     let mut deps = mock_dependencies(&[]);
     let info = mock_info("creator", &[]);
-    let env = mock_env();
 
-    let msg = InstantiateMsg{};
+    let msg = InstantiateMsg::new(Addr::unchecked("creator"));
 
     instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
     let msg = QueryMsg::AccountSummary("ust".to_string());
 
-    let res = query(deps.as_ref(), env, msg).unwrap();
+    let res = query(deps.as_ref(), mock_env(), msg).unwrap();
     let summary:AccountSummary = from_binary(&res).unwrap();
 
     assert_eq!(summary.total_deposits, Decimal::zero());
@@ -69,7 +75,7 @@ fn can_execute_all() {
     {
         let info = mock_info("creator", &[]);
 
-        let msg = InstantiateMsg{};
+        let msg = InstantiateMsg::new(Addr::unchecked("creator"));
 
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
     }
@@ -120,7 +126,7 @@ fn can_execute_all() {
 
         match execute(deps.as_mut(), mock_env(), info, msg) {
             Err(err) => {
-                if err != StdError::generic_err(ERR_NOT_ENOUGH_FUNDS) {
+                if !matches!(err, ContractError::InsufficientFunds { .. }) {
                     panic!("wrong error type!");
                 }
             },

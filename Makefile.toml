@@ -159,3 +159,9 @@ cwd = "./shared"
 command = "cargo"
 args = ["doc", "--no-deps", "--open"]
 cwd = "./shared"
+
+# Won't refresh or open the browser though
+[tasks.docs-watch]
+command = "cargo"
+args = ["watch", "-x", "doc --no-deps"]
+cwd = "./shared"
