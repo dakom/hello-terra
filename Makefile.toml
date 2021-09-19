@@ -106,7 +106,7 @@ script = ["npm run build"]
 cwd = "./frontend/iframe"
 
 ##########################
-##  CONTRACT - REGISTRY ##
+##  CONTRACT - ACCOUNT  ##
 ##########################
 
 [tasks.contract-account-dev]
@@ -146,3 +146,16 @@ cwd = "./contracts/account"
 command = "cargo"
 args = ["watch", "-w", "../../shared", "-w", ".", "-x", "test --no-default-features"]
 cwd = "./contracts/account"
+
+##########################
+##  SHARED DOCS         ##
+##########################
+[tasks.docs]
+command = "cargo"
+args = ["doc", "--no-deps"]
+cwd = "./shared"
+
+[tasks.docs-open]
+command = "cargo"
+args = ["doc", "--no-deps", "--open"]
+cwd = "./shared"

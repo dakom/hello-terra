@@ -98,8 +98,7 @@ jobs:
       run: cargo make build-release 
 
     - name: build shared docs
-      run: cargo doc --no-deps
-      working-directory: ./shared
+      run: cargo make docs
     
     - name: copy shared docs
       run: cp -R target/doc ./dist/frontend/docs
