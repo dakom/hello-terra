@@ -3,6 +3,14 @@
 # [LIVE DEMO](https://dakom.github.io/hello-terra)
 # [SHARED CRATE DOCS](https://dakom.github.io/hello-terra/docs/shared)
 
+# Video walkthrough
+[![Video walkthrough](https://img.youtube.com/vi/UlW1-DnXXes/0.jpg)](https://www.youtube.com/watch?v=UlW1-DnXXes)
+
+# Status
+
+* Working totally fine in LocalTerra
+* Bombay only works with Manual wallet mode (don't worry - I'm not stealing your wallet, you can compile the source here and compare the hash to be sure - but I'd still suggest creating a separate wallet for playing around with anyway!)
+
 # Dev experience
 * Contracts and frontend are guaranteed to typecheck with eachother _at compile-time_ due to sharing the Rust types in a common crate. (right now the request/response are separately defined, but it would be straightforward to unify them too)
 * Use third-party native Rust types like [Decimal](https://docs.rs/cosmwasm-std/latest/cosmwasm_std/struct.Decimal.html) everywhere - prevent (de)serialization errors, floating point errors, and straight up human errors by never worrying about them in the first place! String<>Addr and whatnot conversions be ye gone!
