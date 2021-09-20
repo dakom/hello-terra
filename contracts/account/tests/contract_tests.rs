@@ -10,7 +10,7 @@ use shared::{
     contracts::account::{
         execute::{ExecuteMsg}, 
         instantiate::InstantiateMsg, 
-        query::{QueryMsg, AvailableCoins, AccountSummary}
+        query::{QueryMsg, AvailableCoinsInWallet, AccountSummary}
     },
     result::ContractError 
 };
@@ -42,10 +42,10 @@ fn can_query_coins_empty() {
 
     instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-    let msg = QueryMsg::AvailableCoins;
+    let msg = QueryMsg::AvailableCoinsInWallet;
 
     let res = query(deps.as_ref(), mock_env(), msg).unwrap();
-    let AvailableCoins { list } = from_binary(&res).unwrap();
+    let AvailableCoinsInWallet { list } = from_binary(&res).unwrap();
 
     assert_eq!(list.len(), 0);
 }

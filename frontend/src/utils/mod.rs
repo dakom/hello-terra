@@ -6,5 +6,4 @@ pub mod mixin;
 pub mod events;
 pub mod contract;
 pub mod storage;
-pub mod coin;
 pub mod wallet_bridge;

@@ -18,12 +18,14 @@ use cosmwasm_std::{
     testing::{mock_dependencies, mock_env, mock_info}
 };
 
+// there isn't really much to test since the bulk of the tricky part
+// depends on subcontract messaging
 #[test]
 fn can_instantiate() {
     let mut deps = mock_dependencies(&[]);
     let info = mock_info("hub", &[]);
 
-    let msg = InstantiateMsg{};
+    let msg = InstantiateMsg::new(42);
 
     instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 

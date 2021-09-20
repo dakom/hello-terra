@@ -1,8 +1,7 @@
 mod dom;
 mod state;
-mod actions;
 pub(super) mod styles;
+pub(super) mod manager;
 
 pub use dom::*;
 pub use state::*;
-pub use actions::*;

@@ -2,18 +2,14 @@ use std::rc::Rc;
 use crate::app::App;
 use crate::utils::prelude::*;
 use futures_signals::signal::Mutable;
+use shared::coin::CoinDenom;
 
 pub struct Account {
     pub wallet_info: WalletInfo,
     pub contract_info: ContractInfo,
     pub app: Rc<App>,
-    pub funds: Mutable<Option<Rc<Funds>>>,
-}
-
-pub struct Funds {
-    pub wallet_balance: Mutable<f64>,
-    pub deposit_balance: Mutable<f64>,
-    pub total_deposits: Mutable<f64>,
+    pub available_coins: Mutable<Option<Vec<CoinDenom>>>,
+    pub selected_coin: Mutable<Option<CoinDenom>>,
 }
 
 impl Account {
@@ -22,7 +18,8 @@ impl Account {
             app,
             wallet_info,
             contract_info,
-            funds: Mutable::new(None)
+            available_coins: Mutable::new(None),
+            selected_coin: Mutable::new(None),
         })
     }
 }

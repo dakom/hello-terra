@@ -9,7 +9,7 @@
     The Response types do not need wrappers because we pass a reference ID and check a shared tag to match it to the request
 
 */
-
+use cosmwasm_std::Coin;
 
 ///////// DATA STRUCTS ///////////////
 #[derive(Deserialize, Serialize, Debug)]
@@ -18,7 +18,7 @@ pub struct ContractExecuteMsg<T> {
     pub addr: String,
     pub msg: T, 
     //pub msg: shared::execute::ExecuteMsg, 
-    pub coins: Option<Coins>
+    pub coins: Option<Vec<Coin>>
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -77,7 +77,19 @@ pub enum PostError {
     Iframe(JsValue),
 
     #[error("Cancelled")]
-    Cancelled
+    Cancelled,
+
+    #[error("Json String: {0}")]
+    JsonString(String),
+}
+
+impl PostError {
+    pub fn try_get_json_error<R: DeserializeOwned + 'static>(&self) -> Option<R> {
+        match self {
+            Self::JsonString(err) => serde_json::from_str(&err).ok(),
+            _ => None
+        }
+    }
 }
 
 impl PostError {
@@ -148,7 +160,7 @@ use gloo_events::EventListener;
 use once_cell::sync::Lazy;
 use futures::channel::oneshot;
 use std::future::Future;
-use super::{unwrap_ext::*, coin::*};
+use super::unwrap_ext::*;
 use async_trait::async_trait;
 
 //JSValues must be in thread_local
@@ -166,18 +178,26 @@ static MESSAGE_COUNTER:Lazy<AtomicU64> = Lazy::new(|| AtomicU64::new(1));
 //The bridge
 //All methods consume Self
 pub struct WalletBridge <T: Serialize> {
-    is_payload_first: bool,
+    response_style: ResponseStyle,
+    is_result: bool,
     data: T,
     id: u64,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ResponseStyle {
+    Native,
+    //hehe... https://github.com/terra-money/terra.js/issues/133
+    BincodeAttributeHack
+}
 /// Main implementation. Everything else builds on this
 impl <T: Serialize> WalletBridge <T> {
     pub fn new(data:T) -> Self {
         let id = MESSAGE_COUNTER.load(Ordering::SeqCst);
         MESSAGE_COUNTER.store(id+1, Ordering::SeqCst);
         Self {
-            is_payload_first: false,
+            response_style: ResponseStyle::Native, 
+            is_result: false,
             data,
             id
         }
@@ -188,7 +208,8 @@ impl <T: Serialize> WalletBridge <T> {
     //if the result is None, it means the request was cancelled somehow
     pub async fn post<R: DeserializeOwned + 'static>(mut self) -> Result<R, PostError> {
         let window = web_sys::window().unwrap();
-        let is_payload_first = self.is_payload_first;
+        let response_style = self.response_style;
+        let is_result = self.response_style;
         let self_id = self.id;
 
         let (sender, receiver) = oneshot::channel::<Result<R, PostError>>();
@@ -201,43 +222,56 @@ impl <T: Serialize> WalletBridge <T> {
 
             //hehe... https://github.com/terra-money/terra.js/issues/133
             //TODO - at least flatten this a bit
-            let msg = if is_payload_first {
-                let msg = serde_wasm_bindgen::from_value::<(u64, String, String)>(evt.data());
+            let msg:Result<(u64, String, Result<R, PostError>), String> = if response_style == ResponseStyle::BincodeAttributeHack {
+                let msg = {
+                    serde_wasm_bindgen::from_value::<(u64, String, Result<String, String>)>(evt.data())
+                };
                 match msg {
-                    Ok((id, tag, data)) => {
-                        match base64::decode(data) {
-                            Ok(data) => {
-                                bincode::deserialize::<R>(&data)
-                                    .map(|msg| (id, tag, msg))
-                                    .map_err(|err| format!("{:?}", err))
-                            },
-                            Err(err) => {
-                                Err(format!("{:?}", err))
+                    Ok((id, tag, msg)) => {
+                        Ok((id, tag, {
+                            match msg {
+                                Ok(data) => {
+                                    match base64::decode(data) {
+                                        Ok(data) => {
+                                            bincode::deserialize::<R>(&data)
+                                                .map_err(|err| PostError::String(format!("{:?}", err)))
+                                        },
+                                        Err(err) => {
+                                            Err(PostError::String(format!("{:?}", err)))
+                                        }
+                                    }
+                                },
+                                Err(err) => Err(PostError::JsonString(err))
                             }
-                        }
-                    }
+                        }))
+                    },
                     Err(err) => Err(format!("{:?}", err))
                 }
             } else {
-                serde_wasm_bindgen::from_value::<(u64, String, R)>(evt.data()) 
-                    .map_err(|err| format!("{:?}", err))
+                match serde_wasm_bindgen::from_value::<(u64, String, Result<R, String>)>(evt.data()) {
+                    Ok((id, tag, msg)) => {
+                        Ok((id, tag, msg.map_err(|err| PostError::JsonString(err))))
+                    },
+                    Err(err) => Err(format!("{:?}", err))
+                }
             };
-            
+
             let msg = match msg {
                 Ok((id, tag, res)) => {
                     if tag != TAG {
                         log::info!("Got message for different iframe, ignoring!");
                         None
                     } else if id == self_id {
-                        Some(Ok(res))
+                        Some(res)
                     } else {
                         log::info!("Got message for different id, ignoring!");
                         None
                     }
                 },
                 Err(err) => {
-                    Some(Err(PostError::String(err)))
-                }
+                    //log::info!("serialization error: {}", err);
+                    None
+                } 
             };
 
             if let Some(msg) = msg {
@@ -282,10 +316,16 @@ impl <T: Serialize> ContractExecuteMsg<T> {
         WalletBridgeMsgWrapper::ContractExecute(self)
     } 
 
-    pub async fn execute<R: DeserializeOwned + 'static>(self) -> Result<R, PostError> {
+    pub async fn execute_noresp(self) -> Result<(), PostError> {
         let mut bridge = WalletBridge::new(self.wrap());
-        bridge.is_payload_first = true;
+        bridge.is_result = true;
+        bridge.post::<()>().await
 
+    }
+    pub async fn execute_bincode<R: DeserializeOwned + 'static>(self) -> Result<R, PostError> {
+        let mut bridge = WalletBridge::new(self.wrap());
+        bridge.response_style = ResponseStyle::BincodeAttributeHack;
+        bridge.is_result = true;
         bridge.post::<R>().await
 
     }

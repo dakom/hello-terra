@@ -6,7 +6,14 @@ use cw_storage_plus::{Item, Map};
 use cosmwasm_std::{Addr, Decimal};
 use serde::{Deserialize, Serialize};
 
+/// Account contract code ID for instantiation
+pub const ACCOUNT_CODE_ID: Item<u64> = Item::new("account_code_id");
+
 /// Mapping of user to contract addr 
 pub const USERS: Map<&[u8], Addr> = Map::new("users");
+
+/// Reverse-mapping of contract addr to user 
+pub const CONTRACTS: Map<&[u8], Addr> = Map::new("contracts");
+
 /// Total deposits per-coin 
 pub const TOTALS: Map<&[u8], Decimal> = Map::new("totals");

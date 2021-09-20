@@ -181,6 +181,7 @@ dependencies = [
  "cosmwasm-storage",
  "cw-storage-plus",
  "serde",
+ "serde_json",
  "shared",
  "terra-cosmwasm",
 ]

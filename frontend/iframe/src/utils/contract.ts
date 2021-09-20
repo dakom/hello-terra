@@ -50,11 +50,9 @@ export function contractInstantiate(wallet:WalletState, msg:MsgInstantiateContra
 }
 export function contractExecute(wallet:WalletState, msg:MsgExecuteContract):Promise<string> {
     return wallet.post({ 
-        //fee: new StdFee(10000, '20000uusd'),
         msgs: [msg] 
     })
         .then(res => {
-
             if(!res.success) {
                 return Promise.reject(res);
             } else {
@@ -70,13 +68,13 @@ export function contractExecute(wallet:WalletState, msg:MsgExecuteContract):Prom
                                      if(data.length > 0) {
                                          return Promise.resolve(data[0]);
                                      } else {
-                                         return Promise.reject("empty data array!");
+                                         return Promise.resolve(null);
                                      }
                                 }
                                 return Promise.resolve(data);
                             }
                         }
-                        return Promise.reject("bad contract addr!");
+                        return Promise.resolve(null);
                     }
                 });
             }

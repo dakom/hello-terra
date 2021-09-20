@@ -20,7 +20,16 @@ pub async fn main_js() {
     setup_logger();
     config::init_stylesheet();
     utils::contract::init_known_contracts();
-    dominator::append_dom(&dominator::body(), App::render(App::new()));    
+    dominator::append_dom(&dominator::body(), App::render(App::new())); 
+
+    /*
+    let foo:Result<u32, String> = Ok(42);
+    let bar:Result<u32, String> = Err("forty-two".to_string());
+
+    web_sys::console::log_1(&serde_wasm_bindgen::to_value(&foo).unwrap());
+    web_sys::console::log_1(&serde_wasm_bindgen::to_value(&bar).unwrap());
+    */
+
 }
 
 // enable logging and panic hook only in dev mode

@@ -26,12 +26,12 @@ impl App {
         html!("main", {
             .class(&*styles::MAIN) 
             .child(Header::render(Header::new(state.clone())))
-            .child_signal(state.wallet_contract_init_signal().map(clone!(state => move |(is_initializing, wallet_info, contract_info)| {
+            .child_signal(state.wallet_contract_init_signal().map(clone!(state => move |(is_initializing, wallet_info, hub_contract_info)| {
                 log::info!("INITIALIZING: {}", is_initializing);
                 if is_initializing {
                     Some(Overlay::new().render_loader())
                 } else {
-                    match (wallet_info, contract_info) {
+                    match (wallet_info, hub_contract_info) {
                         (None, _) => Some(Login::render(Login::new(state.clone()))),
                         (Some(wallet_info), None) => Some(Registry::render(Registry::new(wallet_info, state.clone()))),
                         (Some(wallet_info), Some(contract_info)) => Some(Account::render(Account::new(wallet_info, contract_info, state.clone()))),
@@ -54,12 +54,18 @@ impl App {
             //But it is the *only* place. Everywhere else is proper Futures
             .global_event(clone!(state => move |evt:dominator_helpers::events::Message| {
                 //log::info!("EXAMPLE: {}", serde_json::to_string(&crate::utils::wallet_bridge::WalletBridgeMsgWrapper::Status(crate::utils::wallet_bridge::WalletBridgeStatus::Wallet_Not_Connected)).unwrap_ext());
-
-                if let Ok((bridge_id, tag, msg)) = evt.try_serde_data::<(u64, String, WalletBridgeMsgWrapper<()>)>() {
-                    if tag != crate::utils::wallet_bridge::TAG {
-                        log::info!("Not meant for us...");
-                    } else {
-                        Self::handle_wallet_message(state.clone(), msg);
+                match evt.try_serde_data::<(u64, String, Result<WalletBridgeMsgWrapper<()>, String>)>() {
+                    Ok((bridge_id, tag, msg)) => {
+                        if tag != crate::utils::wallet_bridge::TAG {
+                            log::info!("Not meant for us...");
+                        } else {
+                            if let Ok(msg) = msg {
+                                Self::handle_wallet_message(state.clone(), msg);
+                            }
+                        }
+                    },
+                    Err(err) => {
+                        //log::info!("serialization error: {:?}", err);
                     }
                 } 
             }))

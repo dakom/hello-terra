@@ -1,40 +1,44 @@
+#[cfg(feature = "entry")]
+use cosmwasm_std::entry_point;
+
 use std::collections::HashSet;
-use cosmwasm_std::{Decimal, Deps, DepsMut, Env, MessageInfo, Order, QueryResponse, Response, StdResult, WasmMsg, to_binary};
+use cosmwasm_std::{Reply, Decimal, Deps, DepsMut, Env, MessageInfo, Order, QueryResponse, Response, StdResult, WasmMsg, to_binary};
 use shared::{
     contracts::{
         hub,
         account::{
             execute::ExecuteMsg, 
             instantiate::InstantiateMsg, 
-            query::{AccountSummary, AvailableCoins, QueryMsg}
+            query::{AccountSummary, AvailableCoinsInWallet, QueryMsg}
         },
     },
     coin::CoinDenom,
-    result::{ContractResult, ContractError},
-    utils::{IntoQueryResultExt, IntoStringResultExt}
+    result::{CustomResult, ContractError, IntoQueryResultExt, IntoStringResultExt}
 };
 use crate::{
     state::{ACCOUNTS, OWNER, HUB}, 
 };
 
+#[cfg_attr(feature = "entry", entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
-) -> ContractResult<Response> {
+) -> CustomResult<Response> {
     HUB.save(deps.storage, &info.sender)?;
     OWNER.save(deps.storage, &msg.owner_addr)?;
 
-    Ok(Response::default())
+    Ok(Response::new().add_attribute("owner_addr", msg.owner_addr.as_str()))
 }
 
+#[cfg_attr(feature = "entry", entry_point)]
 pub fn execute(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
-) -> ContractResult<Response> {
+) -> CustomResult<Response> {
     let owner = OWNER.load(deps.storage)?;
 
     if info.sender != owner {
@@ -54,12 +58,10 @@ pub fn execute(
 
             let hub = HUB.load(deps.storage)?;
 
-            let hub_msg = hub::execute::ExecuteMsg::AddDeposits(info.funds);
-
             Ok(Response::new().add_message(
                 WasmMsg::Execute {
                     contract_addr: hub.into_string(),
-                    msg: to_binary(&hub_msg)?,
+                    msg: to_binary(&hub::execute::ExecuteMsg::AddDeposits(info.funds))?,
                     funds: Vec::new()
                 }
             ))
@@ -83,14 +85,15 @@ pub fn execute(
     }
 }
 
+#[cfg_attr(feature = "entry", entry_point)]
 pub fn query(
     deps: Deps,
     _env: Env,
     msg: QueryMsg,
-) -> StdResult<QueryResponse> {
+) -> CustomResult<QueryResponse> {
     match msg {
-        QueryMsg::AvailableCoins => {
-            //temp hash set to make collecting mixture easier
+        QueryMsg::AvailableCoinsInWallet => {
+            //temp hash set to make sure there's no duplicates 
             let mut all_coins:HashSet<CoinDenom> = HashSet::new();
 
             //first get all the available coins in the owner's wallet
@@ -100,22 +103,11 @@ pub fn query(
                 all_coins.insert(coin.denom);
             }
 
-            // next add all the available coins from the accounts on file
-            let account_coins:Vec<CoinDenom> = ACCOUNTS.keys(deps.storage, None, None, Order::Ascending)
-                .filter_map(|denom| {
-                    denom.string_result().ok()
-                })
-                .collect();
-
-            for coin_denom in account_coins {
-                all_coins.insert(coin_denom);
-            }
-
             //collect the set into a vec
             let list:Vec<CoinDenom> = all_coins.into_iter().collect();
 
             //return it
-            AvailableCoins { list }.query_result()
+            AvailableCoinsInWallet { list }.query_result()
                 
         },
 
@@ -132,22 +124,14 @@ pub fn query(
             }.query_result()
             
         }
-        /*
-        QueryMsg::GetAccountSummary => {
-
-            let accounts:Vec<(String, Account)> = ACCOUNTS.range(deps.storage, None, None, Order::Ascending)
-                .filter_map(|res| {
-                    res.ok().map(|(denom, account)| {
-                        let denom = denom.string_result()?;
-                        Ok((denom, account))
-                    })
-                })
-                .collect::<Result<Vec<(String, Account)>, StdError>>()?;
-
-            let balances = deps.querier.query_all_balances(deps.)?;
-
-            AccountSummary { accounts }.query_result()
-        },
-        */
     }
+}
+
+#[cfg_attr(feature = "entry", entry_point)]
+pub fn reply(
+    deps: DepsMut,
+    _env: Env,
+    msg: Reply,
+) -> CustomResult<Response> {
+    Ok(Response::default())
 }

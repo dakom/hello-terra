@@ -30,9 +30,20 @@ export function postContractExecute(bridge_id: number | undefined, data?: any) {
 export function postContractQuery(bridge_id: number | undefined, data?: any) {
   postIframeMsg(bridge_id, data);
 }
+
+
 function postIframeMsg(bridge_id:number | undefined, msg: any) {
 
-  const payload = [bridge_id ? bridge_id : 0, TAG, msg];
+  const payload = [bridge_id ? bridge_id : 0, TAG, {Ok: msg}]
+
+  console.log("FROM IFRAME:", payload);
+
+  window.parent.postMessage(payload, "*");
+}
+
+export function postError(bridge_id:number | undefined, msg: any) {
+
+  const payload = [bridge_id ? bridge_id : 0, TAG, {Err: msg ? JSON.stringify(msg) : ""}];
 
   console.log("FROM IFRAME:", payload);
 

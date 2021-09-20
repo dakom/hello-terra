@@ -32,6 +32,19 @@ run_task = { name = [
     "contracts-dev",
 ], fork = true, parallel = true }
 
+[tasks.frontend-dev]
+run_task = { name = [
+    "frontend-run-dev-mediaserver",
+    "frontend-run-dev-npm",
+    "frontend-run-iframe-dev-npm",
+], fork = true, parallel = true }
+
+[tasks.contracts-dev]
+run_task = { name = [
+    "contract-account-dev",
+    "contract-hub-dev",
+], fork = true, parallel = true }
+
 [tasks.build-release]
 run_task = { name = [
     "frontend-build",
@@ -76,12 +89,7 @@ cp -R ./frontend/media/ ./dist/frontend/media/
 ##########################
 
 ## Dev
-[tasks.frontend-dev]
-run_task = { name = [
-    "frontend-run-dev-mediaserver",
-    "frontend-run-dev-npm",
-    "frontend-run-iframe-dev-npm",
-], fork = true, parallel = true }
+
 
 [tasks.frontend-run-dev-mediaserver]
 script_runner = "@shell"

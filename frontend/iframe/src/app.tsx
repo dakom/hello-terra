@@ -28,11 +28,13 @@ import {
   postWindowEvent,
   postContractQuery,
   postContractUpload,
+  postError,
 } from "./utils/postMessage";
 import { mainnet, TAG, walletConnectChainIds } from "./config";
 import { WindowEvent, ContractExecuteMsg, MessageKind, SetupRequestKind, SetupRequestMsg, WalletBridgeMsgWrapper, ContractQueryMsg } from "./types";
 
 import { WalletState, WalletKind } from "./wallet";
+import { convertCoin } from "utils/coin";
 
 export function App() {
   return (
@@ -157,18 +159,14 @@ function WalletManager() {
 
         case MessageKind.ContractUpload:
           withWallet((wallet) => {
-            console.log(wallet.addr);
             const outMsg = new MsgStoreCode(wallet.addr, msg.data);
-            console.log(outMsg);
 
             contractUpload(wallet, outMsg)
               .then((codeId: number) => {
                 return postContractUpload(bridge_id, codeId)
               })
               .catch((error: unknown) => {
-                console.error("GOT ERROR:");
-                console.error(error);
-                return postContractUpload(bridge_id);
+                postError(bridge_id, error);
               });
           });
         break;
@@ -184,7 +182,7 @@ function WalletManager() {
               wallet.addr,
               "",
               id,
-              {},
+              msg.data.msg || {},
               {}
             );
 
@@ -193,20 +191,20 @@ function WalletManager() {
                 postContractInstantiate(bridge_id, addr);
               })
               .catch((error: unknown) => {
-                console.error("GOT ERROR:");
-                console.error(error);
-                postContractInstantiate(bridge_id);
+                postError(bridge_id, error);
               });
           });
         break;
 
         case MessageKind.ContractExecute:
           withWallet((wallet) => {
+            const coins = (msg as ContractExecuteMsg).data.coins?.map(convertCoin);
             //TODO - add coin params...
             const outMsg = new MsgExecuteContract(
               wallet.addr,
               (msg as ContractExecuteMsg).data.addr,
-              (msg as ContractExecuteMsg).data.msg
+              (msg as ContractExecuteMsg).data.msg,
+              coins
             );
 
             contractExecute(wallet, outMsg)
@@ -214,9 +212,7 @@ function WalletManager() {
                 postContractExecute(bridge_id, resp);
               })
               .catch((error: unknown) => {
-                console.error("GOT ERROR:");
-                console.error(error);
-                postContractExecute(bridge_id);
+                postError(bridge_id, error);
               });
           });
           break;
@@ -229,11 +225,12 @@ function WalletManager() {
               (msg as ContractQueryMsg).data.msg, 
             )
               .then((resp:any) => {
-                console.log(resp);
                 return postContractQuery(bridge_id, resp);
               })
+              .catch((error: unknown) => {
+                postError(bridge_id, error);
+              });
           });
-          console.log("TODO");
           break;
 
         default:
