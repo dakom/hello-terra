@@ -104,7 +104,7 @@ jobs:
       run: cp -R target/doc ./dist/frontend/docs
       
     - name: fix gitignore
-      run: rm -f ./dist/frontend/.gitignore
+      run: rm -f ./dist/frontend/media/.gitignore
 
     - name: deploy to gh_pages
       uses: maxheld83/ghpages@master
