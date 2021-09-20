@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 
 use std::collections::HashSet;
-use cosmwasm_std::{Reply, Decimal, Deps, DepsMut, Env, MessageInfo, Order, QueryResponse, Response, StdResult, WasmMsg, to_binary};
+use cosmwasm_std::{BankMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Order, QueryResponse, Reply, Response, StdResult, WasmMsg, to_binary};
 use shared::{
     contracts::{
         hub,
@@ -79,7 +79,12 @@ pub fn execute(
             } else {
                 ACCOUNTS.save(deps.storage, key, &account)?;
 
-                Ok(Response::default())
+                Ok(Response::new()
+                    .add_message(BankMsg::Send {
+                        to_address: info.sender.to_string(),
+                        amount: vec![coin.clone()]
+                    })
+                )
             }
         },
     }
