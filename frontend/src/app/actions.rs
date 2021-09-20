@@ -28,7 +28,6 @@ impl App {
     pub fn handle_wallet_message(state: Rc<Self>, msg: WalletBridgeMsgWrapper<()>) {
         match msg {
             WalletBridgeMsgWrapper::Status(status) => {
-                log::info!("CHANGING STATUS: {:?}", status);
 
                 match status {
                     WalletBridgeStatus::Initializing | WalletBridgeStatus::Wallet_Not_Connected => {

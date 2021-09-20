@@ -53,7 +53,7 @@ impl Account {
                         }))
                         .with_node!(elem => {
                             .event(clone!(state => move |evt:events::Change| {
-                                log::info!("{:?}", elem.value());
+                                state.selected_coin.set(Some(elem.value()));
                             }))
                         })
                     })

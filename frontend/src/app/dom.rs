@@ -27,7 +27,6 @@ impl App {
             .class(&*styles::MAIN) 
             .child(Header::render(Header::new(state.clone())))
             .child_signal(state.wallet_contract_init_signal().map(clone!(state => move |(is_initializing, wallet_info, hub_contract_info)| {
-                log::info!("INITIALIZING: {}", is_initializing);
                 if is_initializing {
                     Some(Overlay::new().render_loader())
                 } else {

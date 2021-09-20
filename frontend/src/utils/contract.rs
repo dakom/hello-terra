@@ -100,6 +100,18 @@ impl From<&ContractHubAddrLookupKey> for String {
     }
 }
 
+pub async fn check_requires_bootstrap(wallet_info: &WalletInfo) -> Result<bool, JsValue> {
+    let hub_cache = get_hash_and_cache_code_id(wallet_info, CONTRACT_HUB_HASH_URI).await?;
+    let account_cache = get_hash_and_cache_code_id(wallet_info, CONTRACT_ACCOUNT_HASH_URI).await?;
+
+    match (hub_cache.1, account_cache.1) {
+        (Some(hub_id), Some(account_id)) => {
+            Ok(false)
+        },
+        _ => Ok(true)
+    }
+}
+
 //ultimately returns (Hub Adddress, Account Address)
 pub async fn bootstrap_registry(wallet_info: &WalletInfo) -> Result<ContractInfo, &'static str> {
     match load_code_ids(&wallet_info).await {

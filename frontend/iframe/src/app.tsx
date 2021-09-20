@@ -56,7 +56,6 @@ function WalletManager() {
   const walletStatus =
     manualWallet != null ? WalletStatus.WALLET_CONNECTED : autoWallet.status;
 
-  console.log(autoWallet.network);
 
   useEffect(() => {
     const wallet =
@@ -73,7 +72,6 @@ function WalletManager() {
           )
         : null;
 
-    console.log("NEW WALLET:", wallet);
 
     //Guards to make sure we're always working with a valid wallet
     const withWallet = (f: (wallet: WalletState) => any) => {

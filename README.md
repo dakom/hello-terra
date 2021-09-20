@@ -4,13 +4,12 @@
 # [SHARED CRATE DOCS](https://dakom.github.io/hello-terra/docs/shared)
 
 # Dev experience
-* Contracts and frontend are guaranteed to typecheck with eachother _at compile-time_ due to sharing the Rust types in a common crate.
+* Contracts and frontend are guaranteed to typecheck with eachother _at compile-time_ due to sharing the Rust types in a common crate. (right now the request/response are separately defined, but it would be straightforward to unify them too)
 * Use third-party native Rust types like [Decimal](https://docs.rs/cosmwasm-std/latest/cosmwasm_std/struct.Decimal.html) everywhere - prevent (de)serialization errors, floating point errors, and straight up human errors by never worrying about them in the first place! String<>Addr and whatnot conversions be ye gone!
-* Simply call `ContractExecuteMsg(msg).execute().await` or `ContractQueryMsg(msg).query().await` on the _actual_ Rust structs defined in the [shared crate](shared). Not only does (de)serialization work as expected (without having to look at a schema!), these return proper Rust futures which can be used in the full Rust async/await ecosystem (note: cancelling won't abort the low-level RPC/XHR/Promises since we're at the mercy of the Terra.JS API for that, and it doesn't support cancellation)
+* Simply call `ContractExecuteMsg(msg).execute().await` or `ContractQueryMsg(msg).query().await` on the _actual_ Rust structs defined in the [shared crate](shared). Not only does (de)serialization work as expected (without having to look at a schema!), these return proper Rust futures which can be used in the full Rust async/await ecosystem (note: cancelling won't abort the low-level RPC/XHR/Promises since we're at the mercy of the Terra.JS API for that, and that dependency layer doesn't support cancellation)
 * Since we don't need a schema, we don't generate one. Use Cargo Docs instead (see above). Though a schema could be generated too for outside projects to interface with our contracts.
-* Playtest all contracts with a frontend and bootstrapping mechanism when contracts are re-compiled. It's not as fast as unit tests - so don't use it for that. Instead, compare against manually compiling, uploading, and instantiating contracts on change. Compared to that, this automated approach is very fast when it comes time to properly integrate (this example only has one contract - but imagine subcontracts etc.). It's fast enough that sometimes writing unit tests are a waste of time.
-* With a debug setting - live reload all 4 frontend parts when source changes (main app, iframe controller, contracts, media)
-* Cargo-make commands for composing different build pipelines
+* Playtest all contracts with a frontend and bootstrapping mechanism when contracts are re-compiled. It's not as fast as unit tests - so don't use it for that. Instead, compare against manually compiling, uploading, and instantiating contracts on change. Compared to that, this automated approach is very fast when it comes time to properly integrate - especially with multiple interdependent contracts
+* Cargo-make commands for composing different build pipelines, live reloading, etc. etc.
 * Simple interface to the wallet-provider bridge. New types don't need to be added often since they are just the wrappers, but when they do it's easy. 
 * Separate deployment targets, easy-to-find configuration files
 * Ci all setup properly
@@ -18,9 +17,9 @@
 # User Experience
 
 * Login via Terra Station chrome extension, mobile app or manual entry (note: mobile is untested and may require more configuration - switching networks live currently [doesn't react](https://github.com/terra-money/wallet-provider/issues/25))
-* No other auth or database (state is persisted on-chain, contract addresses are stored locally in-browser)
-* Running against LocalTerra? Just hit the "bootstrap" button.
-* Simple fake bank account (deposit, withdraw, view balance)
+* No other auth or database (state is persisted on-chain, hub address is stored locally in-browser or hardcoded, account addresses are instantiated from the hub)
+* Running against LocalTerra? Just hit the "bootstrap" button. Want to start fresh again? Just wipe your LocalStorage.
+* Simple fake bank account (deposit, withdraw, view balance) and fake bank (info of total deposits across accounts)
 
 
 # Implementation details 
@@ -33,19 +32,21 @@
 ### Example code for querying a contract
 
 ```
-let summary = ContractQueryMsg::new(QueryMsg::AccountSummary)
+if let Ok(summary) = ContractQueryMsg::new(QueryMsg::AccountSummary)
     .query::<AccountSummary>()
-    .await;
+    .await { ... }
+
 ```
 
 ### Example code for executing a contract
 
 ```
-let balance = ContractExecuteMsg::new(ExecuteMsg::Transfer{
+if let Ok(balance) = ContractExecuteMsg::new(
+    ExecuteMsg::Transfer{
         dest: SomeAddr
     })
     .execute::<TransferBalance>()
-    .await;
+    .await { ... }
 ```
 
 

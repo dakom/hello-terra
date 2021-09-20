@@ -9,7 +9,15 @@ use crate::utils::prelude::*;
 pub struct Registry {
     pub wallet_info: WalletInfo,
     pub app: Rc<App>,
-    pub error: Mutable<Option<String>>
+    pub phase: Mutable<Phase>,
+}
+
+#[derive(Clone, PartialEq, Debug, Eq)]
+pub enum Phase {
+    Checking,
+    WaitUser,
+    Bootstrapping,
+    Error(String)
 }
 
 impl Registry {
@@ -17,7 +25,7 @@ impl Registry {
         Rc::new(Self {
             wallet_info,
             app,
-            error: Mutable::new(None),
+            phase: Mutable::new(Phase::Checking),
         })
     }
 }

@@ -26,7 +26,7 @@ impl Debug {
         Self {
             skip_cache_hub_addr: false,
             skip_cache_code_ids: false,
-            _auto_login_manually: true,
+            _auto_login_manually: false,
             auto_bootstrap_and_register: false,
             has_auto_loggedin_once: AtomicBool::new(false)
         }

@@ -82,7 +82,7 @@ export function contractExecute(wallet:WalletState, msg:MsgExecuteContract):Prom
 }
 
 export function contractQuery(wallet:WalletState, addr:string, query:any):Promise<any> {
-    console.log(query);
+    //console.log(query);
 
     return wallet.lcd.wasm.contractQuery(addr, query)
 }
