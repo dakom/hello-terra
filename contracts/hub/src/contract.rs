@@ -133,22 +133,12 @@ pub fn query(
 ) -> CustomResult<QueryResponse> {
     match msg {
         QueryMsg::AvailableCoins => {
-            //temp hash set to avoid duplicates 
-            let mut all_coins:HashSet<CoinDenom> = HashSet::new();
-
             // add all the available coins from the accounts on file
-            let account_coins:Vec<CoinDenom> = TOTALS.keys(deps.storage, None, None, Order::Ascending)
+            let list:Vec<CoinDenom> = TOTALS.keys(deps.storage, None, None, Order::Ascending)
                 .filter_map(|denom| {
                     denom.string_result().ok()
                 })
                 .collect();
-
-            for coin_denom in account_coins {
-                all_coins.insert(coin_denom);
-            }
-
-            //collect the set into a vec
-            let list:Vec<CoinDenom> = all_coins.into_iter().collect();
 
             //return it
             AvailableCoins { list }.query_result()
