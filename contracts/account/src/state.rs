@@ -4,38 +4,10 @@
 
 use cw_storage_plus::{Item, Map};
 use cosmwasm_std::{Addr, Decimal};
-use serde::{Deserialize, Serialize};
 
 pub const HUB: Item<Addr> = Item::new("hub");
 pub const OWNER: Item<Addr> = Item::new("owner");
-/// Accounts are per-coin, like a user having different banking accounts
+/// this is per-coin, like different bank accounts
 /// It is not per-user (that's at the contract instantiation level)
 /// To get aggregates across the entire system, query the Hub
-pub const ACCOUNTS: Map<&[u8], Account> = Map::new("accounts");
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
-pub struct Account {
-    /// Total deposited over entire history 
-    pub total_deposits: Decimal,
-
-    /// Current balance 
-    pub balance: Decimal,
-}
-
-impl Account {
-    pub fn deposit(&mut self, amount: Decimal) {
-        //Decimal doesn't have +=
-        self.total_deposits = self.total_deposits + amount;
-        self.balance = self.balance + amount;
-    }
-
-    pub fn withdraw(&mut self, amount: Decimal) -> bool {
-        if self.balance >= amount {
-            //Decimal doesn't have -=
-            self.balance = self.balance - amount;
-            true
-        } else {
-            false
-        }
-    }
-}
+pub const TOTAL_DEPOSITS: Map<&[u8], Decimal> = Map::new("accounts");

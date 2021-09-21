@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 
 use std::collections::HashSet;
-use cosmwasm_std::{BankMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Order, QueryResponse, Reply, Response, StdResult, WasmMsg, to_binary};
+use cosmwasm_std::{BankMsg, Decimal, Deps, DepsMut, Env, MessageInfo, QueryResponse, Reply, Response, WasmMsg, to_binary};
 use shared::{
     contracts::{
         hub,
@@ -13,10 +13,10 @@ use shared::{
         },
     },
     coin::CoinDenom,
-    result::{CustomResult, ContractError, IntoQueryResultExt, IntoStringResultExt}
+    result::{CustomResult, ContractError, IntoQueryResultExt}
 };
 use crate::{
-    state::{ACCOUNTS, OWNER, HUB}, 
+    state::{TOTAL_DEPOSITS, OWNER, HUB}, 
 };
 
 #[cfg_attr(feature = "entry", entry_point)]
@@ -26,6 +26,9 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> CustomResult<Response> {
+    //instantiation is via the hub contract
+    //info.sender is the contract, not original caller
+    //so we grab and save the caller via InstantiateMsg
     HUB.save(deps.storage, &info.sender)?;
     OWNER.save(deps.storage, &msg.owner_addr)?;
 
@@ -39,6 +42,7 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> CustomResult<Response> {
+    //execute messages are from the user
     let owner = OWNER.load(deps.storage)?;
 
     if info.sender != owner {
@@ -51,41 +55,30 @@ pub fn execute(
             for coin in info.funds.iter() {
                 let key = coin.denom.as_bytes();
                 let amount = Decimal::from_ratio(coin.amount, 1u128);
-                let mut account = ACCOUNTS.load(deps.storage, key).unwrap_or_default();
-                account.deposit(amount);
-                ACCOUNTS.save(deps.storage, key, &account)?;
+                let total_deposits = TOTAL_DEPOSITS.load(deps.storage, key).unwrap_or_default();
+                TOTAL_DEPOSITS.save(deps.storage, key, &(total_deposits + amount))?;
             }
 
             let hub = HUB.load(deps.storage)?;
 
-            Ok(Response::new().add_message(
-                WasmMsg::Execute {
-                    contract_addr: hub.into_string(),
-                    msg: to_binary(&hub::execute::ExecuteMsg::AddDeposits(info.funds))?,
-                    funds: Vec::new()
-                }
-            ))
-
+            Ok(Response::new()
+                .add_message(
+                    WasmMsg::Execute {
+                        contract_addr: hub.into_string(),
+                        msg: to_binary(&hub::execute::ExecuteMsg::AddDeposits(info.funds))?,
+                        funds: Vec::new()
+                    }
+                )
+            )
         }
        
         ExecuteMsg::Withdraw(coin) => {
-            let key = coin.denom.as_bytes();
-            let amount = Decimal::from_ratio(coin.amount, 1u128);
-
-            let mut account = ACCOUNTS.load(deps.storage, key).unwrap_or_default();
-
-            if !account.withdraw(amount) {
-                Err(ContractError::InsufficientFunds { balance: account.balance, required: amount })
-            } else {
-                ACCOUNTS.save(deps.storage, key, &account)?;
-
-                Ok(Response::new()
-                    .add_message(BankMsg::Send {
-                        to_address: info.sender.to_string(),
-                        amount: vec![coin.clone()]
-                    })
-                )
-            }
+            Ok(Response::new()
+                .add_message(BankMsg::Send {
+                    to_address: info.sender.to_string(),
+                    amount: vec![coin.clone()]
+                })
+            )
         },
     }
 }
@@ -93,7 +86,7 @@ pub fn execute(
 #[cfg_attr(feature = "entry", entry_point)]
 pub fn query(
     deps: Deps,
-    _env: Env,
+    env: Env,
     msg: QueryMsg,
 ) -> CustomResult<QueryResponse> {
     match msg {
@@ -117,26 +110,18 @@ pub fn query(
         },
 
         QueryMsg::AccountSummary(denom) => {
-            let account = ACCOUNTS.load(deps.storage, denom.as_bytes()).unwrap_or_default();
+            let total_deposits= TOTAL_DEPOSITS.load(deps.storage, denom.as_bytes()).unwrap_or_default();
             let owner = OWNER.load(deps.storage)?;
 
+            let account_balance = deps.querier.query_balance(env.contract.address, denom.to_string())?;
             let wallet_balance = deps.querier.query_balance(owner, denom)?;
 
             AccountSummary {
-                total_deposits: account.total_deposits,
-                account_balance: account.balance,
+                total_deposits,
+                account_balance: Decimal::from_ratio(account_balance.amount, 1u128),
                 wallet_balance: Decimal::from_ratio(wallet_balance.amount, 1u128)
             }.query_result()
             
         }
     }
-}
-
-#[cfg_attr(feature = "entry", entry_point)]
-pub fn reply(
-    deps: DepsMut,
-    _env: Env,
-    msg: Reply,
-) -> CustomResult<Response> {
-    Ok(Response::default())
 }

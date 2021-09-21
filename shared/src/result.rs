@@ -1,5 +1,5 @@
 use thiserror::Error;
-use cosmwasm_std::{Addr, StdResult, Response, StdError, QueryResponse, Decimal, to_binary};
+use cosmwasm_std::{Addr, Response, StdError, QueryResponse, Decimal, to_binary};
 use serde::Serialize;
 
 /// Alias for `Result<T, CustomResult>` 
