@@ -50,7 +50,7 @@ pub fn execute(
     }
 
 
-    match &msg {
+    match msg {
         ExecuteMsg::Deposit => {
             for coin in info.funds.iter() {
                 let key = coin.denom.as_bytes();
@@ -76,7 +76,7 @@ pub fn execute(
             Ok(Response::new()
                 .add_message(BankMsg::Send {
                     to_address: info.sender.to_string(),
-                    amount: vec![coin.clone()]
+                    amount: vec![coin]
                 })
             )
         },
