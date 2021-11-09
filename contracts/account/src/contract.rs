@@ -15,6 +15,7 @@ use shared::{
     coin::CoinDenom,
     result::{CustomResult, ContractError, IntoQueryResultExt}
 };
+
 use crate::{
     state::{TOTAL_DEPOSITS, OWNER, HUB}, 
 };
