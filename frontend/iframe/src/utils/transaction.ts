@@ -1,5 +1,7 @@
 import { WalletState } from "../wallet";
 import {TRANSACTION_INFO_POLL_WAIT, TRANSACTION_INFO_TIMEOUT} from "../config";
+import {CreateTxOptions} from "@terra-money/terra.js";
+import {TxResult} from '@terra-dev/wallet-types';
 
 interface TxInfoRequest {
     timeout?: number,
@@ -10,52 +12,67 @@ interface TxInfoRequest {
     wallet: WalletState
 }
 
-
-//https://github.com/terra-money/wallet-provider/issues/23#issuecomment-918725271
-//The first promise to txInfo() will fail on 404 and cause a re-poll
-//The validator allows for async verification, but rejection there will *not* cause a re-polling
+//we need to poll at a regular interval, but also timeout at some point
+//see discussion at https://github.com/terra-money/wallet-provider/issues/23#issuecomment-918725271
+//The validator allows for async verification (failure there will reject properly, not case a re-poll)
 export function requestTxInfo({timeout, pollWait, hash, wallet, validator}:TxInfoRequest):Promise<any> {
-    const DEFAULT_VALIDATOR = (res:any) => {
-        if(res == null) {
-            return Promise.reject("no result!");
-        } else {
-            return Promise.resolve(res); 
+    return new Promise((resolve, reject) => {
+        const DEFAULT_VALIDATOR = (res:any) => {
+            if(res == null) {
+                return Promise.reject("no result!");
+            } else {
+                return Promise.resolve(res); 
+            }
         }
-    }
 
-    const TIMEOUT = timeout == null ? TRANSACTION_INFO_TIMEOUT : timeout;
-    const POLL_WAIT = pollWait == null ? TRANSACTION_INFO_POLL_WAIT : pollWait;
-    const VALIDATOR = validator == null ? DEFAULT_VALIDATOR : validator;
+        const TIMEOUT = timeout == null ? TRANSACTION_INFO_TIMEOUT : timeout;
+        const POLL_WAIT = pollWait == null ? TRANSACTION_INFO_POLL_WAIT : pollWait;
+        const VALIDATOR = validator == null ? DEFAULT_VALIDATOR : validator;
 
-    const badPromise:Promise<string> = new Promise((resolve, reject) => {
-        setTimeout(() => reject("timeout!"), TIMEOUT);
-    });
+        let stopProcessing = false;
+        let pollId:NodeJS.Timeout;
 
-    const goodPromise:Promise<any> = new Promise<{valid: boolean, data: any}>(resolve => {
-        const poll = () => {
-            setTimeout(() => {
+        function clearTimeouts() {
+            stopProcessing = true;
+            clearTimeout(pollId);
+            clearTimeout(timeoutId);
+        }
+
+        let timeoutId = setTimeout(() => {
+            clearTimeouts();
+            reject("timeout");
+        }, TIMEOUT);
+
+
+        function poll() {
+            if(!stopProcessing) {
                 wallet.lcd.tx.txInfo(hash)
                     .then(res => {
                         return VALIDATOR(res)
                             .then(data => ({valid: true, data}))
                             .catch(reason => Promise.resolve({valid: false, data: reason}))
                     })
-                    .then(resolve)
-                    .catch(_res => {
-                        poll();
-                    });
-            }, POLL_WAIT);
-        }
+                    .then(
+                        ({valid, data}) => {
+                            clearTimeouts();
+                            if(!valid) {
+                                // validation failed - don't poll again, fully reject
+                                reject(data);
+                            } else {
+                                // validation succeeded - resolve
+                                resolve(data);
+                            }
+                        },
+                        // error in tx itself, i.e. 404, try again!
+                        (_err) => {
+                            pollId = setTimeout(() => {
+                                poll();
+                            }, POLL_WAIT);
+                        }
+                    )
+            }
+        } 
 
         poll();
     })
-    .then(({valid, data}) => {
-        if(valid) {
-            return Promise.resolve(data);
-        } else {
-            return Promise.reject(data);
-        }
-    });
-
-    return Promise.race([badPromise, goodPromise]);
 }
