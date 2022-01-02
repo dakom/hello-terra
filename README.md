@@ -12,6 +12,7 @@ Note that failure to install all the prerequisites may cause orphaned processes.
 ## Local
 * `npm install` in root
 * `npm install` in `frontend/iframe`
+* copy `.env.sample` to `.env` change whatever values 
 
 ## Global
 The usual tools (rust, node, etc.) plus:
@@ -21,10 +22,10 @@ The usual tools (rust, node, etc.) plus:
 * b3sum: `cargo install b3sum`
 * wasm-opt: download the latest [binaryen release](https://github.com/WebAssembly/binaryen/releases), put it somewhere, and put the `bin` folder on your PATH
 
-# Status
+## CI Setup
 
-* Working totally fine in LocalTerra
-* Bombay only works with Manual wallet mode (don't worry - I'm not stealing your wallet, you can compile the source here and compare the hash to be sure - but I'd still suggest creating a separate wallet for playing around with anyway!)
+1. replace `dakom` in `.github/workflows/build.yml` with your github username
+2. create/add `GH_PAT` to your repo's secrets (it's a github deployment token [for deploying to gh_pages](https://github.com/maxheld83/ghpages/pull/18))
 
 # Dev experience
 * Contracts and frontend are guaranteed to typecheck with eachother _at compile-time_ due to sharing the Rust types in a common crate. (right now the request/response are separately defined, but it would be straightforward to unify them too)
@@ -83,21 +84,6 @@ Having this abstraction does have a benefit, since it allows for new wallet prov
 
 This does have one downside though - the typescript and Rust types for the high-level communication wrappers need to be kept in sync and only a few API calls are supported at the moment. However, This is only needed for these wrappers, not each message use-case. For example, adding new contract message request/response payloads doesn't require any further work (it's all kept in Rust and the wallet is oblivious to the on-the-wire json format). Adding more Terra.JS functionality like Bank Queries and whatnot would only need to be done once.
 
-# Local Development
-
-## Bootstrapping / one-time setup
-
-1. Install required tooling (rust, npm, cargo make)
-    - rust
-    - npm
-    - cargo make: cargo install cargo-make
-    - b3sum: cargo install b3sum
-    - wasm-opt: download at [binaryen releases](https://github.com/WebAssembly/binaryen/releases) and put it somewhere on your path
-2. copy `.env.sample` to `.env` change whatever values 
-3. `npm install`
-4. in `frontend/iframe` also `npm install`
-
-
 # Build commands
 
 There's a variety in the Makefile.toml which can be composed in various ways.
@@ -133,8 +119,3 @@ Currently, this project isn't setup for contract migrations
 
 - `cargo make contracts-test` (one-off)
 - `cargo make contracts-test-watch` (with a watcher for file changes)
-
-# CI Setup
-
-1. replace `dakom` in `.github/workflows/build.yml` with your github username
-2. create/add `GH_PAT` to your repo's secrets (it's a github deployment token [for deploying to gh_pages](https://github.com/maxheld83/ghpages/pull/18))
