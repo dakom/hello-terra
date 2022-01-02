@@ -60,7 +60,6 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '16'
-        cache: 'npm'
 
     - name: download binaryen release 
       run: wget -c https://github.com/WebAssembly/binaryen/releases/download/version_101/binaryen-version_101-x86_64-linux.tar.gz -O binaryen.tgz
