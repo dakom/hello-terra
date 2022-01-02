@@ -34,7 +34,7 @@ import { mainnet, TAG, walletConnectChainIds } from "./config";
 import { WindowEvent, ContractExecuteMsg, MessageKind, SetupRequestKind, SetupRequestMsg, WalletBridgeMsgWrapper, ContractQueryMsg } from "./types";
 
 import { WalletState, WalletKind } from "./wallet";
-import { convertCoin } from "utils/coin";
+import { convertCoin } from "./utils/coin";
 
 export function App() {
   return (
@@ -105,15 +105,15 @@ function WalletManager() {
 
             switch (setup_data.kind) {
               case SetupRequestKind.ConnectExtension:
-                autoWallet.connect(ConnectType.CHROME_EXTENSION);
+                autoWallet.connect(ConnectType.EXTENSION);
                 break;
 
               case SetupRequestKind.ConnectMobile:
-                autoWallet.connect(ConnectType.WALLETCONNECT);
+                autoWallet.connect(ConnectType.EXTENSION);
                 break;
 
               case SetupRequestKind.Install:
-                autoWallet.install(ConnectType.CHROME_EXTENSION);
+                autoWallet.install(ConnectType.EXTENSION);
                 break;
 
               case SetupRequestKind.Disconnect:

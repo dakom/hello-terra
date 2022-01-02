@@ -63,7 +63,7 @@ impl <T: Serialize> IntoExecuteResultExt for T {
 impl <T: Serialize> IntoQueryResultExt for T {
     // QueryResponse supports native binary
     fn query_result(&self) -> CustomResult<QueryResponse> {
-        to_binary(self).map_err(|err| ContractError::Std(err))
+        to_binary(self).map_err(ContractError::Std)
     }
 }
 

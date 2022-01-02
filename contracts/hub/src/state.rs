@@ -4,7 +4,6 @@
 
 use cw_storage_plus::{Item, Map};
 use cosmwasm_std::{Addr, Decimal};
-use serde::{Deserialize, Serialize};
 
 /// Account contract code ID for instantiation
 pub const ACCOUNT_CODE_ID: Item<u64> = Item::new("account_code_id");

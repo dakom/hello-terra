@@ -6,6 +6,21 @@
 # Video walkthrough
 [![Video walkthrough](https://img.youtube.com/vi/UlW1-DnXXes/0.jpg)](https://www.youtube.com/watch?v=UlW1-DnXXes)
 
+# Dev prerequisites
+Note that failure to install all the prerequisites may cause orphaned processes... to debug, run `cargo make contracts-dev` and `cargo make frontend-dev` separately
+
+## Local
+* `npm install` in root
+* `npm install` in `frontend/iframe`
+
+## Global
+The usual tools (rust, node, etc.) plus:
+
+* cargo-make: `cargo install cargo-make` 
+* watchexec: `cargo install watchexec-cli`
+* b3sum: `cargo install b3sum`
+* wasm-opt: download the latest [binaryen release](https://github.com/WebAssembly/binaryen/releases), put it somewhere, and put the `bin` folder on your PATH
+
 # Status
 
 * Working totally fine in LocalTerra
@@ -13,7 +28,7 @@
 
 # Dev experience
 * Contracts and frontend are guaranteed to typecheck with eachother _at compile-time_ due to sharing the Rust types in a common crate. (right now the request/response are separately defined, but it would be straightforward to unify them too)
-* Use third-party native Rust types like [Decimal](https://docs.rs/cosmwasm-std/latest/cosmwasm_std/struct.Decimal.html) everywhere - prevent (de)serialization errors, floating point errors, and straight up human errors by never worrying about them in the first place! String<>Addr and whatnot conversions be ye gone!
+* Use third-party native Rust types everywhere - prevent (de)serialization errors, floating point errors, and straight up human errors by never worrying about them in the first place
 * Simply call `ContractExecuteMsg(msg).execute().await` or `ContractQueryMsg(msg).query().await` on the _actual_ Rust structs defined in the [shared crate](shared). Not only does (de)serialization work as expected (without having to look at a schema!), these return proper Rust futures which can be used in the full Rust async/await ecosystem (note: cancelling won't abort the low-level RPC/XHR/Promises since we're at the mercy of the Terra.JS API for that, and that dependency layer doesn't support cancellation)
 * Since we don't need a schema, we don't generate one. Use Cargo Docs instead (see above). Though a schema could be generated too for outside projects to interface with our contracts.
 * Playtest all contracts with a frontend and bootstrapping mechanism when contracts are re-compiled. It's not as fast as unit tests - so don't use it for that. Instead, compare against manually compiling, uploading, and instantiating contracts on change. Compared to that, this automated approach is very fast when it comes time to properly integrate - especially with multiple interdependent contracts

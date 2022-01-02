@@ -1,5 +1,5 @@
 import {WalletStatus} from "@terra-money/wallet-provider";
-import { WindowEvent, WalletInfoResponse } from "types";
+import { WindowEvent, WalletInfoResponse } from "../types";
 import {TAG} from "../config";
 
 ///// IFRAME MESSAGE HANDLING //////

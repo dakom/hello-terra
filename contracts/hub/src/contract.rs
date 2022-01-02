@@ -1,7 +1,6 @@
 #[cfg(feature = "entry")]
 use cosmwasm_std::entry_point;
-use std::collections::HashSet;
-use cosmwasm_std::{Addr, Decimal, Reply, Deps, DepsMut, Env, MessageInfo, Order, QueryResponse, Response, StdError, StdResult, SubMsg, WasmMsg, to_binary, wasm_instantiate};
+use cosmwasm_std::{Addr, Decimal, Reply, Deps, DepsMut, Env, MessageInfo, Order, QueryResponse, Response, SubMsg, wasm_instantiate};
 use shared::{
     coin::CoinDenom, 
     contracts::{
@@ -85,7 +84,7 @@ pub fn reply(
     msg: Reply,
 ) -> CustomResult<Response> {
     if msg.id == REPLY_ON_NEW_ACCOUNT_ID {
-        let result = msg.result.into_result().map_err(|err| ContractError::String(err))?;
+        let result = msg.result.into_result().map_err(ContractError::String)?;
 
         //debugging
         //return Err(ContractError::String(serde_json::to_string(&result).unwrap()));

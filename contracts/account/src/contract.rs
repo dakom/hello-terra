@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 
 use std::collections::HashSet;
-use cosmwasm_std::{BankMsg, Decimal, Deps, DepsMut, Env, MessageInfo, QueryResponse, Reply, Response, WasmMsg, to_binary};
+use cosmwasm_std::{BankMsg, Decimal, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response, WasmMsg, to_binary};
 use shared::{
     contracts::{
         hub,
