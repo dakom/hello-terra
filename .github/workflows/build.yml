@@ -8,7 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: checkout repo
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
+
 
     - name: create dist directory 
       run: mkdir dist
@@ -55,6 +56,12 @@ jobs:
     #   env:
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: install node 
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+        cache: 'npm'
+
     - name: download binaryen release 
       run: wget -c https://github.com/WebAssembly/binaryen/releases/download/version_101/binaryen-version_101-x86_64-linux.tar.gz -O binaryen.tgz
 
@@ -66,8 +73,6 @@ jobs:
       with:
         path: ${{github.workspace}}/binaryen/bin
 
-    - name: install node
-      uses: actions/setup-node@v1
 
     - name: install npm deps
       run: npm install 
