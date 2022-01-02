@@ -11,6 +11,11 @@ _secret-keys
 .idea
 *.code-workspace
 
+# lock files for rust libraries
+Cargo.lock
+package-lock.json
+
+# lock files for npm
 # for now it's safe to ignore all windows scripts since they'd only be local
 *.bat
 
@@ -49,8 +54,3 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 *.lnk
-
-# lock files for rust libraries
-backend/core/Cargo.lock
-shared/rust/Cargo.lock
-config/rust/Cargo.lock
