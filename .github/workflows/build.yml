@@ -70,10 +70,10 @@ jobs:
       uses: actions/setup-node@v1
 
     - name: install npm deps
-      run: npm ci
+      run: npm install 
 
     - name: install npm deps for iframe
-      run: npm ci
+      run: npm install 
       working-directory: ./frontend/iframe
 
     - name: install rust nightly
