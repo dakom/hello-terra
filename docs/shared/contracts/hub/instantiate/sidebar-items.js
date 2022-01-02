@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["InstantiateMsg","Entry point of the whole system"]]});

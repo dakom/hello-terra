@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["QueryMsg","Send Query messages to read state This is quicker and consumes less gas than an ExecuteMsg"]],"struct":[["AccountSummary","The account summary is per-user To get a global total_deposits, query the Hub Contract"],["AvailableCoinsInWallet","Return message from AvailableCoinsInWallet"]]});

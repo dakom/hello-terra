@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["InstantiateMsg","The account contract shouldn’t be instantiated directly Rather, it gets instantiated by the Hub Contract "]]});

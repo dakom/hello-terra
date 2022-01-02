@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ExecuteMsg","Deposit or withdraw money There’s no return message because a successful transaction Means that it’s accurate for the UI to update values locally Alternatively, a separate AccountSummary query could be issued"]]});

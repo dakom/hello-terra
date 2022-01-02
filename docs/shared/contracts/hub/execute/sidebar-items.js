@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ExecuteMsg","Execute messages for the Hub"]],"struct":[["AccountInfo","Return message from NewAccount Contains the address for the instantiated contract "]]});

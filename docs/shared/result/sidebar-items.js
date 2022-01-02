@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ContractError","Contract Error types"]],"trait":[["IntoExecuteResultExt",""],["IntoQueryResultExt",""],["IntoStringResultExt",""]],"type":[["CustomResult","Alias for `Result<T, CustomResult>` "]]});

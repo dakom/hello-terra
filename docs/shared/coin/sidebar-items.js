@@ -1,0 +1,1 @@
+initSidebarItems({"type":[["CoinDenom","Just a type alias to keep it clear "]]});
