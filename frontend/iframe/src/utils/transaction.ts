@@ -1,7 +1,5 @@
 import { WalletState } from "../wallet";
 import {TRANSACTION_INFO_POLL_WAIT, TRANSACTION_INFO_TIMEOUT} from "../config";
-import {CreateTxOptions} from "@terra-money/terra.js";
-import {TxResult} from '@terra-dev/wallet-types';
 
 interface TxInfoRequest {
     timeout?: number,
